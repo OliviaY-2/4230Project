@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<param name="cube_model" command="$(find xacro)/xacro --inorder '$(find rand_models)/urdf/cube.urdf'"/>
+	
+	<arg name="x" default="0"/>
+	<arg name="y" default="0"/>
+	<arg name="z" default="1.5"/>
+	
+	<node name="display_launch" pkg="gazebo_ros" type="spawn_model" output = "screen"
+				args="-urdf -param cube_model -model cube -x $(arg x) -y $(arg y) -z$(arg z)"/>
+
+</launch>
+
