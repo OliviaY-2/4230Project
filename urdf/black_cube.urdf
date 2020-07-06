@@ -1,5 +1,5 @@
 <?xml version='1.0'?>
-<robot name='blue_cube'>
+<robot name='black_cube'>
 
 <link name="base_link">
   <collision>
@@ -27,7 +27,11 @@
 </link>
 
 <gazebo reference="base_link">
-  <material>Gazebo/Blue</material>
+  <mu1>0</mu1>
+  <mu2>0</mu2>
+  <material>Gazebo/FlatBlack</material>
 </gazebo>
+
+
 
 </robot>
