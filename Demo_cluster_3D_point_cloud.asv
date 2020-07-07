@@ -5,18 +5,20 @@ close all;
 %obtain file with coordinates and convert to type pointcloud
 filename = 'BunchOfObjects1.mat';
 cube = load(filename);
+cube.xyz(cube.xyz(:,3) > 0.9) = [];
+
 figure(1);
-ptCloud = pointCloud(cube.xyz);
+ptCloudHiRes = pointCloud(cube.xyz);
+ptCloud = pcdownsample(ptCloudHiRes, 'gridAverage', 0.005);
 %show the obtained point cloud
 pcshow(ptCloud)
 title('Point Cloud')
 %label the groups of points that form a cluster
-minDistance = 0.005;
+
+minDistance = 0.01;
 [labels,numClusters] = pcsegdist(ptCloud,minDistance);
 
 %copy the x,y,z coordinates of the points
-locations = ptCloud.Location;
-
 %find out how many points were labelled and create an array
 %where each 'layer' in allObjects is the coordinates for a 
 %cluster of points. Each cluster is represented as object1.
@@ -42,7 +44,7 @@ for clustCnt = 1:1:numClusters
     end
     %copy the cluster of points for objects big enough
     %into allObjects and reset object1
-    if cnt2 > 300 && cnt2 < 30000
+    if cnt2 > 200 %&& cnt2 < 30000
         objectSizes(validObjects) = cnt2;
         allObjects(:,:,validObjects) = object1;
         validObjects = validObjects + 1;
@@ -50,14 +52,15 @@ for clustCnt = 1:1:numClusters
     object1 = zeros(size1,3);
     toc
 end
-
+validObjects = validObjects - 1;
 objectSizes(objectSizes == 0) = [];
+allObjects = allObjects(:,:,1:validObjects);
 
-% %loop through and show each cluster
-% figureNum = 1;
-% for counter = 1:numClusters
-%     figure(figureNum);
-%     figureNum = figureNum + 1;
-%     pcshow(allObjects(:,:,counter));
-%     
-% end
+%loop through and show each cluster
+figureNum = 2;
+for counter = 1:validObjects
+    figure(figureNum);
+    figureNum = figureNum + 1;
+    pcshow(allObjects(:,:,counter));
+    
+end
