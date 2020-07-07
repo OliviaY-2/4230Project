@@ -33,6 +33,7 @@ or object position in Gazebo so that each data set is unique and useful.
 %}
 %% Run this code using 'Run Section' or 'Run an Advance' to reduce time (no need to re-establish connection to gazebo every time)
 %% Set up connection to gazebo
+tic
 clear all;
 close all;
 clc;
@@ -43,7 +44,8 @@ rosshutdown;
 rosinit(ipaddress);
 blockposes = rossubscriber('/gazebo/link_states');
 pause(2);
-
+toc
+disp('Finished initialisation');
 %% Receive new data
 disp("Getting new image..");
 tic
@@ -51,19 +53,20 @@ posdata = receive(blockposes, 10);
 imsub = rossubscriber('/camera/color/image_raw');
 pcsub = rossubscriber('/camera/depth/points');
 
-%figure(1);
 testIm = readImage(imsub.LatestMessage);
+%figure(1);
 %imshow(testIm);
 
 %debug info about the ros topic eg subscribers, publishers etc
 %rostopic list;
 
 % plot the depth data with rgb
-%figure(2);
 depthxyz = readXYZ(pcsub.LatestMessage);
 depthrgb = readRGB(pcsub.LatestMessage);
+%figure(2);
 %pcshow(depthxyz,depthrgb);% remove rgb if you don't want colours
 toc
+disp("Finished getting new image.");
 %% Save RGBD Data - Remember to change 'filename' for each new data set
 % UNCOMMENT THIS SECTION IF YOU WANT TO SAVE RGBD DATA
 % xyz = xyz coords of each point in the point cloud
@@ -72,7 +75,7 @@ toc
 disp("Saving new image..");
 tic
 % save the xyz and rgb data into a struct, then export
-filename = '3cubes8.mat'; % Change this to whatever you want to call this data set
+filename = 'RedCube29.mat' % Change this to whatever you want to call this data set
 
 full_filename = fullfile('.\RGBD_Data\',filename);
 s1.xyz = depthxyz; % matlab automatically recognises s1 as a struct
@@ -89,6 +92,7 @@ figure(4);
 imshow(test.image);
 %}
 toc
+disp('Saved!');
 %%
 
 
