@@ -1,3 +1,4 @@
+%%
 %{
 Check if VM is connected to wired network (top right hand corner) 
 In VM command window find IP addr (double check) $ ifconfig
@@ -13,13 +14,25 @@ roslaunch ur5_t2_4230 ur5_world.launch
 
 In new terminal, open rviz to see camera outputs
 rviz
+%}
+%% INSTRUCTIONS
+%{ 
+Run 'ROS_Connection.m' in sections. Have Gazebo open and make sure the IP
+address matches the one you are using.
 
-to add object
-in gazebo, click the shapes in the bar at the top of the panel
+1. Run and advance the 'Set up connection to gazebo' section. You only 
+need to run this once per session.
+2. To collect training data, 'Run and Advance' the 'Receive new data' 
+section, wait for it to finish.
+3. Then to save the training data, update 'filename' to whatever you want to 
+call this particular data set. This variable is found in the 'Save RGBD Data' section.
+4. 'Run and advance' the 'Save RGBD Data' section.
 
-%} 
-%following script retrieves a single RGB-D image from the kinect camera in Gazebo
-
+Repeat steps 2-4 for each new data set. Remember to change the camera angle 
+or object position in Gazebo so that each data set is unique and useful.
+%}
+%% Run this code using 'Run Section' or 'Run an Advance' to reduce time (no need to re-establish connection to gazebo every time)
+%% Set up connection to gazebo
 clear all;
 close all;
 clc;
@@ -30,27 +43,52 @@ rosshutdown;
 rosinit(ipaddress);
 blockposes = rossubscriber('/gazebo/link_states');
 pause(2);
+
+%% Receive new data
+disp("Getting new image..");
+tic
 posdata = receive(blockposes, 10);
 imsub = rossubscriber('/camera/color/image_raw');
 pcsub = rossubscriber('/camera/depth/points');
 
-figure(1);
+%figure(1);
 testIm = readImage(imsub.LatestMessage);
-imshow(testIm);
-
-figure(2);
-scatter3(pcsub.LatestMessage);
+%imshow(testIm);
 
 %debug info about the ros topic eg subscribers, publishers etc
-rostopic list;
+%rostopic list;
 
-%{ 
-Commands that can be used with data type 'pointcloud2'
-% Get RGB info and xyz-coordinates from the 
-% point cloud using readXYZ and readRGB.
-xyz = readXYZ(ptcloud2);
-rgb = readRGB(ptcloud2);
-% plot point cloud
-scatter3(ptcloud2)
+% plot the depth data with rgb
+%figure(2);
+depthxyz = readXYZ(pcsub.LatestMessage);
+depthrgb = readRGB(pcsub.LatestMessage);
+%pcshow(depthxyz,depthrgb);% remove rgb if you don't want colours
+toc
+%% Save RGBD Data - Remember to change 'filename' for each new data set
+% UNCOMMENT THIS SECTION IF YOU WANT TO SAVE RGBD DATA
+% xyz = xyz coords of each point in the point cloud
+% rgb = the rgb values of each point in the point cloud
+% image = the rgb image
+disp("Saving new image..");
+tic
+% save the xyz and rgb data into a struct, then export
+filename = '3cubes8.mat'; % Change this to whatever you want to call this data set
+
+full_filename = fullfile('.\RGBD_Data\',filename);
+s1.xyz = depthxyz; % matlab automatically recognises s1 as a struct
+s1.rgb = depthrgb;
+s1.image = testIm;
+save(full_filename,'-struct','s1'); % input order: filename, datattype 'struct', struct
+
+%{
+% try reloading our saved file to check that it was successful
+figure(3);
+test = load(full_filename);
+pcshow(test.xyz,test.rgb);
+figure(4); 
+imshow(test.image);
 %}
+toc
+%%
+
 
