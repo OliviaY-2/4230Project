@@ -50,11 +50,10 @@ for clustCnt = 1:1:numClusters
     object1 = zeros(size1,3);
     toc
 end
+
 objectSizes(objectSizes == 0) = [];
 
-
-
-%loop through and show each cluster
+% %loop through and show each cluster
 % figureNum = 1;
 % for counter = 1:numClusters
 %     figure(figureNum);
