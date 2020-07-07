@@ -4,8 +4,10 @@ close all;
 
 %obtain file with coordinates and convert to type pointcloud
 filename = 'BunchOfObjects1.mat';
+%filename = 'BlueCube3.mat';
 cube = load(filename);
-cube.xyz(cube.xyz(:,3) > 0.9) = [];
+floor = max(cube.xyz(:,3)) - 0.05;
+cube.xyz(cube.xyz(:,3) >= floor,:) = [];
 
 figure(1);
 ptCloudHiRes = pointCloud(cube.xyz);
@@ -19,6 +21,8 @@ minDistance = 0.01;
 [labels,numClusters] = pcsegdist(ptCloud,minDistance);
 
 %copy the x,y,z coordinates of the points
+locations = ptCloud.Location;
+
 %find out how many points were labelled and create an array
 %where each 'layer' in allObjects is the coordinates for a 
 %cluster of points. Each cluster is represented as object1.
@@ -27,6 +31,7 @@ size1 = size1(1);
 object1 = zeros(size1,3);
 allObjects = zeros(size1,3,numClusters);
 objectSizes = zeros(numClusters,1);
+centroid = zeros(size1,3);
 validObjects = 1;
 
 %loop through all the clusters found
@@ -47,6 +52,9 @@ for clustCnt = 1:1:numClusters
     if cnt2 > 200 %&& cnt2 < 30000
         objectSizes(validObjects) = cnt2;
         allObjects(:,:,validObjects) = object1;
+        centroid(validObjects,1) = mean(object1(:,1));
+        centroid(validObjects,2) = mean(object1(:,2)); 
+        centroid(validObjects,3) = mean(object1(:,3)); 
         validObjects = validObjects + 1;
     end
     object1 = zeros(size1,3);
@@ -54,6 +62,7 @@ for clustCnt = 1:1:numClusters
 end
 validObjects = validObjects - 1;
 objectSizes(objectSizes == 0) = [];
+centroid(objectSizes == 0) = [];
 allObjects = allObjects(:,:,1:validObjects);
 
 %loop through and show each cluster
