@@ -19,8 +19,8 @@ T2 = [cos(theta(2)), -1*sin(theta(2))*cos(0), sin(theta(2)*sin(0)), 425*cos(thet
       sin(theta(2)), cos(theta(2)*sin(0)), -1*cos(theta(2))*sin(0), 425*sin(theta(2));
       0, sin(0), cos(0), 0;
       0, 0, 0, 1;];
-T3 = [cos(theta(3)), -1*sin(theta(3))*cos(0), sin(theta(3)*sin(0)), 392*cos(theta(2));
-      sin(theta(3)), cos(theta(3)*sin(0)), -1*cos(theta(3))*sin(0), 392*sin(theta(2));
+T3 = [cos(theta(3)), -1*sin(theta(3))*cos(0), sin(theta(3)*sin(0)), 392*cos(theta(3));
+      sin(theta(3)), cos(theta(3)*sin(0)), -1*cos(theta(3))*sin(0), 392*sin(theta(3));
       0, sin(0), cos(0), 0;
       0, 0, 0, 1;];
 T4 = [cos(theta(4)), -1*sin(theta(4))*cos(pi/2), sin(theta(4)*sin(pi/2)), 0*cos(theta(4));
