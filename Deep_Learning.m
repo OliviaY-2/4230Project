@@ -12,14 +12,16 @@ digitDatasetPath = myFolder + "\*.mat";
 
 imds = dir(digitDatasetPath);
 Imdata = zeros(length(imds),1);
+hello = {};
 for k = 1:length(imds)
   baseFileName = imds(k).name;
   fullFileName = fullfile(myFolder, baseFileName);
   MatData = load(fullFileName);
   hello = cat(1,hello,MatData.image);
 end
-
-
+test = cell2mat(hello(1));
+imshow(test);
+%imshow(hello(1,1));
 % Define network architecture
 % Specify training options
 % Train network
