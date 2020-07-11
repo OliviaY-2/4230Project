@@ -1,0 +1,186 @@
+<?xml version='1.0'?>
+<robot name="table">
+
+<link name="world"/>
+
+<joint name = "joint_fix_1" type = "fixed">
+  <parent link="world"/>
+  <child link = "front_left_leg"/>
+</joint>
+
+
+<link name ="front_left_leg">
+  <collision>
+    <origin xyz="0.68 0.38 0" rpy="0 0 0"/>
+    <geometry>
+      <cylinder length="0.4" radius="0.02"/>
+    </geometry>
+  </collision>
+
+  <visual>
+    <origin xyz="0.68 0.38 0" rpy="0 0 0"/>
+    <geometry>
+      <cylinder length="0.4" radius="0.02"/>
+    </geometry>
+  </visual>
+
+  <inertial>
+    <origin xyz="0.68 0.38 0" rpy="0 0 0"/>
+    <mass value="0.05" />
+    <inertia
+      ixx="0.001" ixy="0.0"  ixz="0.0"
+      iyy="0.001" iyz="0.0"
+      izz="0.001" />
+  </inertial>
+</link>
+
+<joint name = "joint_fix_2" type = "fixed">
+  <parent link="world"/>
+  <child link = "front_right_leg"/>
+</joint>
+
+
+<link name ="front_right_leg">
+  <collision>
+    <origin xyz="0.68 -0.38 0" rpy="0 0 0"/>
+    <geometry>
+      <cylinder length="0.4" radius="0.02"/>
+    </geometry>
+  </collision>
+
+  <visual>
+    <origin xyz="0.68 -0.38 0" rpy="0 0 0"/>
+    <geometry>
+      <cylinder length="0.4" radius="0.02"/>
+    </geometry>
+  </visual>
+
+  <inertial>
+    <origin xyz="0.68 -0.38 0" rpy="0 0 0"/>
+    <mass value="0.05" />
+    <inertia
+      ixx="0.001" ixy="0.0"  ixz="0.0"
+      iyy="0.001" iyz="0.0"
+      izz="0.001" />
+  </inertial>
+</link>
+
+<joint name = "joint_fix_3" type = "fixed">
+  <parent link="world"/>
+  <child link = "back_left_leg"/>
+</joint>
+
+
+<link name ="back_left_leg">
+  <collision>
+    <origin xyz="-0.68 0.38 0" rpy="0 0 0"/>
+    <geometry>
+      <cylinder length="0.4" radius="0.02"/>
+    </geometry>
+  </collision>
+
+  <visual>
+    <origin xyz="-0.68 0.38 0" rpy="0 0 0"/>
+    <geometry>
+      <cylinder length="0.4" radius="0.02"/>
+    </geometry>
+  </visual>
+
+  <inertial>
+    <origin xyz="-0.68 0.38 0" rpy="0 0 0"/>
+    <mass value="0.05" />
+    <inertia
+      ixx="0.001" ixy="0.0"  ixz="0.0"
+      iyy="0.001" iyz="0.0"
+      izz="0.001" />
+  </inertial>
+</link>
+
+<joint name = "joint_fix_4" type = "fixed">
+  <parent link="world"/>
+  <child link = "back_right_leg"/>
+</joint>
+
+
+<link name ="back_right_leg">
+  <collision>
+    <origin xyz="-0.68 -0.38 0" rpy="0 0 0"/>
+    <geometry>
+      <cylinder length="0.4" radius="0.02"/>
+    </geometry>
+  </collision>
+
+  <visual>
+    <origin xyz="-0.68 -0.38 0" rpy="0 0 0"/>
+    <geometry>
+      <cylinder length="0.4" radius="0.02"/>
+    </geometry>
+  </visual>
+
+  <inertial>
+    <origin xyz="-0.68 -0.38 0" rpy="0 0 0"/>
+    <mass value="0.05" />
+    <inertia
+      ixx="0.001" ixy="0.0"  ixz="0.0"
+      iyy="0.001" iyz="0.0"
+      izz="0.001" />
+  </inertial>
+</link>
+
+<joint name= "surface" type="fixed">
+	<parent link="back_right_leg"/>
+	<child link="tabletop"/>
+</joint>
+
+<link name ="tabletop">
+  <collision>
+    <origin xyz="0 0 0.2" rpy="0 0 0"/>
+    <geometry>
+      <box size="1.5 0.8 0.03"/>
+    </geometry>
+  </collision>
+
+  <visual>
+    <origin xyz="0 0 0.2" rpy="0 0 0"/>
+    <geometry>
+      <box size="1.5 0.8 0.03"/>
+    </geometry>
+  </visual>
+
+  <inertial>
+    <origin xyz="0 0 0.2" rpy="0 0 0"/>
+    <mass value="0.05" />
+    <inertia
+      ixx="0.001" ixy="0.0"  ixz="0.0"
+      iyy="0.001" iyz="0.0"
+      izz="0.001" />
+  </inertial>
+</link>
+
+<gazebo reference="front_left_leg">
+	<material>Gazebo/Grey</material>
+</gazebo>
+
+<gazebo reference="front_right_leg">
+	<material>Gazebo/Grey</material>
+</gazebo>
+
+<gazebo reference="back_left_leg">
+	<material>Gazebo/Grey</material>
+</gazebo>
+
+<gazebo reference="back_right_leg">
+	<material>Gazebo/Grey</material>
+</gazebo>
+
+<gazebo reference="tabletop">
+	<material>Gazebo/Black</material>
+</gazebo>
+
+<gazebo>
+	<static>true</static>
+</gazebo>
+
+</robot>
+
+
