@@ -1,1 +1,39 @@
-
+<?xml version="1.0"?>
+<sdf version="1.5">
+	<model name="triangular_prism">
+		<static>true</static>
+		<link name="link">
+			<collision name="collision">
+				<geometry>
+					<mesh>
+						<uri>model://triangular_prism/meshes/20255_Triangular_Prism_V1.dae</uri>
+						<scale>1.000 1.000 1.000</scale>
+					</mesh>
+				</geometry>
+				<surface>
+					<friction>
+						<ode>
+							<mu>0.6</mu>
+							<mu2>0.6</mu2>
+						</ode>
+					</friction>
+				</surface>
+			</collision>
+			<visual name="visual">
+				<pose>0 0 0 0 0 0</pose>
+				<geometry>
+					<mesh>
+						<uri>model://triangular_prism/meshes/20255_Triangular_Prism_V1.dae</uri>
+						<scale>1.000 1.000 1.000</scale>
+					</mesh>
+				</geometry>
+				<material>
+				<script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name>
+          </script>
+        </material>
+      </visual>
+		</link>
+	</model>
+</sdf>
