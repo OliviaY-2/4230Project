@@ -1,1 +1,37 @@
+<?xml version="1.0" ?>
+ 
+<sdf version="1.5">
+	<world name="default">
+		<!-- A global light source -->
+		<include>
+			<uri>model://sun</uri>
+		</include>
+ 
+		<!-- A ground plane -->
+		<include>
+			<uri>model://ground_plane</uri>
+		</include>
 
+		<!-- kinect -->
+		<include>
+			<uri>model://kinect_ros</uri>
+			<pose>1 1 1 0.000000 0 0</pose>
+		</include>
+
+		<!-- testing mesh -->
+		<!--model name="my_mesh">
+			<pose>0 4 0 0.000000 0 0</pose>
+			<static>true</static>
+			<link name="body">
+				<visual name="visual">
+					<geometry>
+						<mesh><uri>file://20255_Triangular_Prism_V1.dae</mesh>
+					</geomtry>
+				</visual>
+			</link>
+		</model-->
+             
+
+		
+	</world>
+</sdf>
