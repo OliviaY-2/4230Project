@@ -4,7 +4,7 @@
 % Last Edited: 13/07/2020
 % 
 %{
-Taking a file created using ROS_Connect.m, the images were used to train
+Taking a .mat file created using ROS_Connect.m, the images were used to train
 and validate a deep learning network following instructions from 
 https://au.mathworks.com/help/deeplearning/ug/create-simple-deep-learning-network-for-classification.html
 
@@ -25,7 +25,6 @@ Instructions:
 
 %clear all;
 close all;
-imshow(image);
 
 %% Load and explore image data
 
@@ -121,6 +120,8 @@ layers = [
 % specifying validation data and frequency. Shuffle data every epoch. Train
 % network on training data and calculate accuracy on validation data at
 % regular intervals during training. 
+% GPU is used if Parallel Computing Toolbox is available and CUDA enabled 
+% GPU with compute capability >=3.0
 % Show training progress plot and turn off command window output
 options = trainingOptions('sgdm', ...
     'InitialLearnRate',0.01, ...
@@ -129,13 +130,13 @@ options = trainingOptions('sgdm', ...
     'ValidationData',imdsValidation, ...
     'ValidationFrequency',30, ...
     'Verbose',false, ...
+    'ExecutionEnvironment','auto', ...
     'Plots','training-progress');
 
 %% Train network
 
 % Train network with architecture defines by 'layers', training data and
-% training options. GPU is used if Parallel Computing Toolbox is available and CUDA
-% enabled GPU with compute capability >=3.0
+% training options. 
 
 net = trainNetwork(imdsTrain,layers,options);
 
