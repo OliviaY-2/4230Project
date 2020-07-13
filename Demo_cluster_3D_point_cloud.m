@@ -1,9 +1,18 @@
 % Demo_cluster_3D_point_cloud
 % Author: Lucas Way z5164204
 % First made (DD/MM/YYY): 07/07/2020
-% Last Edited: 08/07/2020
-% Taking a file created using ROS_Connect.m, the XYZ coordinates 
-% of the centroid of the objects is returned.
+% Last Edited: 13/07/2020
+
+%{
+Taking a .mat file created using ROS_Connect.m, the depth point cloud is 
+used and the XYZ coordinates of the centroid of the objects is returned.
+
+07/07/2020 Separated clusters.
+08/07/2020 Add centroids to object.
+13/07/2020 Increased accuracy by only use points on the top surface of the
+    object.
+
+%}
 
 clc;
 clear all;
@@ -11,8 +20,9 @@ close all;
 
 % Obtain file with coordinates
 tic;
-filename = 'LODESOFSTUFF.mat';
+filename = 'BunchOfObjects1.mat';
 cube = load(filename);
+imshow(cube.image);
 % Remove the floor. Assume the point furthest away in the z axis 
 % is the floor
 floor = max(cube.xyz(:,3)) - 0.05;
@@ -39,7 +49,8 @@ locations = ptCloud.Location;
 % cluster of points. Each cluster is represented as object1.
 size1 = size(labels(:,1));
 size1 = size1(1);
-object1 = zeros(size1,3);
+%object1 = zeros(size1,3);
+object1 = NaN(size1,3);
 allObjects = zeros(size1,3,numClusters);
 objectSizes = zeros(numClusters,1);
 centroid = zeros(size1,3);
@@ -61,15 +72,26 @@ for clustCnt = 1:1:numClusters
     % into allObjects and reset object1
     % Also count how many objects were found using validObjects
     if cnt2 > 200
+        % store how many points are in the cluster
         objectSizes(validObjects) = cnt2;
+        % find the z coordinate for the top most face
+        topFace = min(object1(:,3));
+        % set points that correspond to the side of the objects to 0
+        object1(object1(:,3) > (topFace + 0.005),:) = 0;
+        % store clusters
         allObjects(:,:,validObjects) = object1;
+        % remove NaN and 0 values
+        object1(isnan(object1(:,1)),:) = [];
         object1(object1(:,1) == 0,:) = [];
+        
+        % calculate centroids
         centroid(validObjects,1) = mean(object1(:,1));
         centroid(validObjects,2) = mean(object1(:,2)); 
         centroid(validObjects,3) = mean(object1(:,3)); 
         validObjects = validObjects + 1;
     end
-    object1 = zeros(size1,3);
+    % reset object1
+    object1 = NaN(size1,3);
     toc
 end
 % Correct value for validObjects

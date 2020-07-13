@@ -1,13 +1,31 @@
 % Deep Learning
 % Author: Lucas Way z5164204
 % First made (DD/MM/YYY): 11/07/2020
-% Last Edited: 11/07/2020
-% Taking a file created using ROS_Connect.m, the images were used to train
-% and validate a deep learning network following instructions from 
-% https://au.mathworks.com/help/deeplearning/ug/create-simple-deep-learning-network-for-classification.html
+% Last Edited: 13/07/2020
+% 
+%{
+Taking a file created using ROS_Connect.m, the images were used to train
+and validate a deep learning network following instructions from 
+https://au.mathworks.com/help/deeplearning/ug/create-simple-deep-learning-network-for-classification.html
 
-clear all;
+Instructions:
+    Running the full code creates a set of training image data sets and a
+    set for validation. These images are used to train a neural network
+    which is saved as the variable 'net'. 
+    Using the 'classify(net,_)' function to classify a set of images. The entire
+    code does not need to be re-run assuming the workspace was saved. The
+    net variable can be re-used. Run the last two sections (ignoring the 
+    function matRead at the very end) 
+
+11/07/2020 created file, added images to cell array.
+13/07/2020 changed to use image data store, successfully trained neural
+    network.
+
+%}
+
+%clear all;
 close all;
+imshow(image);
 
 %% Load and explore image data
 
@@ -40,6 +58,7 @@ myFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data
 imdatastore = imageDatastore(fullfile(myFolder,... 
     {'Red Cube (Diagonal)','Red Cube (straight)'} ...
     ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
+
 % load a single .mat file
 MatData = load(imdatastore.Files{1});
 % show an image for testing purposes
@@ -125,7 +144,18 @@ net = trainNetwork(imdsTrain,layers,options);
 YPred = classify(net,imdsValidation);
 YValidation = imdsValidation.Labels;
 
-accuracy = sum(YPred == YValidation)/numel(YValidation)
+accuracy = sum(YPred == YValidation)/numel(YValidation);
+
+%% Classify Image
+
+% get path name
+multiFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
+% collect all file paths for .mat data sets
+multidatastore = imageDatastore(fullfile(multiFolder,... 
+    {'Multiple Objects'} ...
+    ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
+
+YPred = classify(net,multidatastore);
 
 %% function to read images from .mat files
 function data = matRead(filename)
