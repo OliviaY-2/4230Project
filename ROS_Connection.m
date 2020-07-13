@@ -44,6 +44,7 @@ rosshutdown;
 rosinit(ipaddress);
 blockposes = rossubscriber('/gazebo/link_states');
 pause(2);
+
 toc
 disp('Finished initialisation');
 %% Receive new data
@@ -52,7 +53,7 @@ tic
 posdata = receive(blockposes, 10);
 imsub = rossubscriber('/camera/color/image_raw');
 pcsub = rossubscriber('/camera/depth/points');
-
+pause(2);
 testIm = readImage(imsub.LatestMessage);
 %figure(1);
 %imshow(testIm);
@@ -65,18 +66,18 @@ depthxyz = readXYZ(pcsub.LatestMessage);
 depthrgb = readRGB(pcsub.LatestMessage);
 %figure(2);
 %pcshow(depthxyz,depthrgb);% remove rgb if you don't want colours
-toc
+
 disp("Finished getting new image.");
-%% Save RGBD Data - Remember to change 'filename' for each new data set
+
+% Save RGBD Data - Remember to change 'filename' for each new data set
 % UNCOMMENT THIS SECTION IF YOU WANT TO SAVE RGBD DATA
 % xyz = xyz coords of each point in the point cloud
 % rgb = the rgb values of each point in the point cloud
 % image = the rgb image
 disp("Saving new image..");
-tic
-% save the xyz and rgb data into a struct, then export
-filename = '01_Blue_Cylinder.mat' % Change this to whatever you want to call this data set
 
+% save the xyz and rgb data into a struct, then export
+filename = '05_Cubes_and_ Cylinders.mat' % Change this to whatever you want to call this data set
 full_filename = fullfile('.\RGBD_Data\',filename);
 s1.xyz = depthxyz; % matlab automatically recognises s1 as a struct
 s1.rgb = depthrgb;
