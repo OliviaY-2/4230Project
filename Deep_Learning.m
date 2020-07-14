@@ -1,7 +1,7 @@
 % Deep Learning
 % Author: Lucas Way z5164204
 % First made (DD/MM/YYY): 11/07/2020
-% Last Edited: 13/07/2020
+% Last Edited: 14/07/2020
 % 
 %{
 Taking a .mat file created using ROS_Connect.m, the images were used to train
@@ -20,6 +20,7 @@ Instructions:
 11/07/2020 created file, added images to cell array.
 13/07/2020 changed to use image data store, successfully trained neural
     network.
+14/07/2020 trained using red cubes and blue cylinders
 
 %}
 
@@ -55,7 +56,7 @@ close all;
 myFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
 % collect all file paths for .mat data sets
 imdatastore = imageDatastore(fullfile(myFolder,... 
-    {'Red Cube (Diagonal)','Red Cube (straight)'} ...
+    {'Red Cube','Blue Cylinder'} ...
     ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
 
 % load a single .mat file
@@ -69,7 +70,7 @@ labelCount = countEachLabel(imdatastore);
 imagedimension = size(MatData.image);
 
 %separate image sets for training and validation
-numTrainingFiles = 10;
+numTrainingFiles = 33;
 [imdsTrain,imdsValidation] = splitEachLabel(imdatastore,numTrainingFiles,'randomize');
 
 %% Define network architecture
@@ -153,10 +154,15 @@ accuracy = sum(YPred == YValidation)/numel(YValidation);
 multiFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
 % collect all file paths for .mat data sets
 multidatastore = imageDatastore(fullfile(multiFolder,... 
-    {'Multiple Objects'} ...
+    {'Cubes and Cylinders'} ...
     ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
 
-YPred = classify(net,multidatastore);
+% load a single .mat file
+MatData = load(multidatastore.Files{1});
+% show an image for testing purposes
+imshow(MatData.image);
+
+YPred1 = classify(net,multidatastore);
 
 %% function to read images from .mat files
 function data = matRead(filename)
