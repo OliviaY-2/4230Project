@@ -15,6 +15,7 @@ Instructions:
 14/07/2020 added code from Deep_Learning.m. Added creation of array of
     bounding boxes. Still a work in progress. Need to change to use images
     on black table to help with binarising images.
+16/07/2020 added new images, Red Cube (new), red cylinder, blue cube, blue cylinder
 
 %}
 %clear all;
@@ -25,28 +26,16 @@ close all;
 myFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
 % collect all file paths for .mat data sets
 imdatastore = imageDatastore(fullfile(myFolder,... 
-    {'Red Cube','Blue Cylinder'} ...
+    {'Red Cube (New)','Red Cylinder','Blue Cube','Blue Cylinder'} ...
     ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
 %boxlabelstore = boxLabelDatastore(
-
+classes = size(imdatastore.Folders(:,1),1);
 % load a single .mat file
 MatData = load(imdatastore.Files{1});
 % count the number of different labels there are
 labelCount = countEachLabel(imdatastore);
 % find the dimensions of the image
 imagedimension = size(MatData.image);
-
-% show bounding box for one image
-% grey = rgb2gray(MatData.image);
-% bw = imbinarize(grey,'adaptive','ForegroundPolarity','bright');
-% imshow(MatData.image);
-% 
-% testBoundingBox = regionprops(bw,'BoundingBox');
-% hold on
-% for k = 1 : length(testBoundingBox)
-%      BB = testBoundingBox(k).BoundingBox;
-%      rectangle('Position', [BB(1),BB(2),BB(3),BB(4)],'EdgeColor','r','LineWidth',2) ;
-% end
 
 %separate image sets for training and validation
 labelNums = table2array(labelCount(:,2));
@@ -57,7 +46,7 @@ trainBoundingBox = zeros(size(imdsTrain.Files,1),4);
 for cnt = 1:1:size(imdsTrain.Files,1)
     MatData = load(imdsTrain.Files{cnt});
     grey = rgb2gray(MatData.image);
-    bw = imbinarize(grey,'adaptive','ForegroundPolarity','bright');
+    bw = imbinarize(grey);
     imshow(MatData.image);
     boundindBox = regionprops(bw,'BoundingBox');
     trainBoundingBox(cnt,:) = boundindBox.BoundingBox;
@@ -73,13 +62,13 @@ for cnt = 1:1:size(imdsValidation.Files,1)
     validateBoundingBox(cnt,:) = boundindBox.BoundingBox;
 end
 %%
-hold on;
-imshow(bw);
-    for k = 1 : length(boundindBox)
-     BB = boundindBox(k).BoundingBox;
-     rectangle('Position', [BB(1),BB(2),BB(3),BB(4)],'EdgeColor','r','LineWidth',2) ;
-    end
-    hold off;
+% hold on;
+% imshow(bw);
+%     for k = 1 : length(boundindBox)
+%      BB = boundindBox(k).BoundingBox;
+%      rectangle('Position', [BB(1),BB(2),BB(3),BB(4)],'EdgeColor','r','LineWidth',2) ;
+%     end
+% hold off;
 
 %% Define network architecture
 layers = [
@@ -113,7 +102,7 @@ layers = [
     % one final fully connected layer. Neurons connect to all neurons in
     % preceding layer. combine previous features to classify image.
     % OutputSize param is number of classes in target data.
-    fullyConnectedLayer(2)
+    fullyConnectedLayer(classes)
     % normalise output of fully connected layer. Output of positive numbers
     % that sum to one, used for classification probabilities by
     % classification layer
@@ -158,19 +147,19 @@ accuracy = sum(YPred == YValidation)/numel(YValidation);
 
 %% Classify Image
 
-% get path name
-multiFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
-% collect all file paths for .mat data sets
-multidatastore = imageDatastore(fullfile(multiFolder,... 
-    {'Cubes and Cylinders'} ...
-    ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
-
-% load a single .mat file
-MatData = load(multidatastore.Files{1});
-% show an image for testing purposes
-imshow(MatData.image);
-
-YPred1 = classify(net,multidatastore);
+% % get path name
+% multiFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
+% % collect all file paths for .mat data sets
+% multidatastore = imageDatastore(fullfile(multiFolder,... 
+%     {'Cubes and Cylinders'} ...
+%     ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
+% 
+% % load a single .mat file
+% MatData = load(multidatastore.Files{1});
+% % show an image for testing purposes
+% imshow(MatData.image);
+% 
+% YPred1 = classify(net,multidatastore);
 
 %% function to read images from .mat files
 function data = matRead(filename)
