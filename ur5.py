@@ -59,5 +59,11 @@ class ur5{
 		p = p0[:3]
 		return p
 	def inverseKin(double x, double y, double z): #return the joint positions for the target position x,y,z
-		pass
+		currentPosition = forwardKin()
+		targetPosition = np.array[[x][y][z]]
+		V = np.subtract(targetPosition, currentPosition)
+		JT = J.transpose()
+		dTheta = np.matmul(JT,V)
+		thetas = np.array[[theta1][theta2][theta3][theta4][theta5][theta6]] + dTheta
+		return thetas
 }
