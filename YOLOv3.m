@@ -23,6 +23,9 @@ Edit History:
 21/07/2020 fixed bounding box issue (rounded decimal places). Successfully
     augmented data. Preprocess training data. Defined YOLO v3 network.
     Specified training options.
+22/07/2020 Included upsampleLayer.m and generateTargets.m file from
+    Matlab\examples\deeplearning_shared\main folder. Error with
+    read(preprocessedTrainingData);
 
 %}
 close all;
@@ -31,11 +34,12 @@ close all;
 % get path name
 myFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
 % collect all file paths for .mat data sets
+classes = {'Red Cube (New)','Red Cylinder','Blue Cube','Blue Cylinder'};
 imdatastore = imageDatastore(fullfile(myFolder,... 
-    {'Red Cube (New)','Red Cylinder','Blue Cube','Blue Cylinder'} ...
-    ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
+    classes), ...
+    'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
 % boxlabelstore = boxLabelDatastore(
-classes = size(imdatastore.Folders(:,1),1);
+classNum = size(imdatastore.Folders(:,1),1);
 % load a single .mat file
 MatData = load(imdatastore.Files{1});
 % count the number of different labels there are
@@ -125,7 +129,7 @@ augmentedTrainingData = transform(trainingData,@augmentData);
 %% Preprocess Training Data
 % specify network input size. Input size is similar to training image size.
 % Increases consistancy of images used
-networkInputSize = [480 640 3];
+networkInputSize = [227 227 3];
 % preprocess augmented data to prepare for training
 preprocessedTrainingData = transform(augmentedTrainingData, @(data)preprocessData(data, networkInputSize));
 
@@ -171,8 +175,8 @@ lgraph = squeezenetFeatureExtractor(baseNetwork, networkInputSize);
 % prediction elements per anchor box
 % add detection heads to feature extraction network
 
-classNames = trainingDataTbl.Properties.VariableNames(2:end);
-numClasses = size(classNames, 2);
+classNames = classes;
+numClasses = size(classNames,2);
 numPredictorsPerAnchor = 5 + numClasses;
 lgraph = addFirstDetectionHead(lgraph, anchorBoxMasks{1}, numPredictorsPerAnchor);
 lgraph = addSecondDetectionHead(lgraph, anchorBoxMasks{2}, numPredictorsPerAnchor);
@@ -269,9 +273,100 @@ velocity = [];
 % Train network with architecture defines by 'layers', training data and
 % training options. 
 executionEnvironment = "auto";
+net = dlnetwork(lgraph);
 
-net = trainNetwork(imdsTrain,layers,options);
+    % Create subplots for the learning rate and mini-batch loss.
+    fig = figure;
+    [lossPlotter, learningRatePlotter] = configureTrainingProgressPlotter(fig);
+    % Custom training loop.
+    for iteration = 1:numIterations
+        % Reset datastore.
+        if ~hasdata(preprocessedTrainingData)
+            reset(preprocessedTrainingData);
+        end
+        % Read batch of data and create batch of images and
+        % ground truths.
+        data = read(preprocessedTrainingData);
+        [XTrain,YTrain] = createBatchData(data, classNames);
+        
+        % Convert mini-batch of data to dlarray.
+        XTrain = dlarray(single(XTrain),'SSCB');
+        
+        % If training on a GPU, then convert data to gpuArray.
+        if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu"
+            XTrain = gpuArray(XTrain);
+        end
+        
+        % Evaluate the model gradients and loss using dlfeval and the
+        % modelGradients function.
+        [gradients,loss,state] = dlfeval(@modelGradients, net, XTrain, YTrain, anchorBoxes, anchorBoxMasks, penaltyThreshold, networkOutputs);
+        
+        % Apply L2 regularization.
+        gradients = dlupdate(@(g,w) g + l2Regularization*w, gradients, net.Learnables);
+        
+        % Determine the current learning rate value.
+        currentLR = piecewiseLearningRateWithWarmup(iteration, learningRate, warmupPeriod, numIterations);
+        
+        % Update the network learnable parameters using the SGDM optimizer.
+        [net, velocity] = sgdmupdate(net, gradients, velocity, currentLR);
+        
+        % Update the state parameters of dlnetwork.
+        net.State = state;
+        
+        % Update training plot with new points.
+        addpoints(lossPlotter, iteration, double(gather(extractdata(loss))));
+        addpoints(learningRatePlotter, iteration, currentLR);
+        drawnow  
+    end
+% net = trainNetwork(imdsTrain,layers,options);
 
+%% Evaluate Model
+
+confidenceThreshold = 0.5;
+overlapThreshold = 0.5;
+
+% Create the test datastore.
+preprocessedTestData = transform(testData,@(data)preprocessData(data,networkInputSize));
+
+% Create a table to hold the bounding boxes, scores, and labels returned by
+% the detector. 
+numImages = size(testDataTbl,1);
+results = table('Size',[numImages 3],...
+    'VariableTypes',{'cell','cell','cell'},...
+    'VariableNames',{'Boxes','Scores','Labels'});
+
+% Run detector on each image in the test set and collect results.
+for i = 1:numImages
+    
+    % Read the datastore and get the image.
+    data = read(preprocessedTestData);
+    I = data{1};
+    
+    % Convert to dlarray. If GPU is available, then convert data to gpuArray.
+    XTest = dlarray(I,'SSCB');
+    if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu"
+        XTest = gpuArray(XTest);
+    end
+    
+    % Run the detector.
+    [bboxes, scores, labels] = yolov3Detect(net, XTest, networkOutputs, anchorBoxes, anchorBoxMasks, confidenceThreshold, overlapThreshold, classNames);
+    
+    % Collect the results.
+    results.Boxes{i} = bboxes;
+    results.Scores{i} = scores;
+    results.Labels{i} = labels;
+end
+
+% Evaluate the object detector using Average Precision metric.
+[ap, recall, precision] = evaluateDetectionPrecision(results, preprocessedTestData);
+
+% Plot precision-recall curve.
+figure
+plot(recall, precision)
+xlabel('Recall')
+ylabel('Precision')
+grid on
+title(sprintf('Average Precision = %.2f', ap))
 %% Predict labels of new data and calculate classification accuracy
 
 YPred = classify(net,imdsValidation);
