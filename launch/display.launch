@@ -36,38 +36,10 @@
   <include file="$(find ur5_moveit_config)/launch/move_group.launch">
     <arg name="limited" default="$(arg limited)"/>
     <arg name="debug" default="$(arg debug)" />
-  </include>
-	
-	<!-- Spawn the cubes -->
-	<node name="spawn_greencube" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/green_cube.urdf -urdf -model green_cube"/>
+</include>
 
-	<node name="spawn_bluecube" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/blue_cube.urdf -urdf -model blue_cube -y 0.2 -x 0 -z 0.05"/>
-
-	<node name="spawn_redcube" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/red_cube.urdf -urdf -model red_cube -y 0.4 -x 0 -z 0.05 "/> 
-	
-	<!-- Spawn the cylinders -->
-	<node name="spawn_greencylinder" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/green_cylinder.urdf -urdf -model green_cylinder -y 0 -x -0.3 -z 0.05"/>
-
-	<node name="spawn_bluecylinder" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/blue_cylinder.urdf -urdf -model blue_cylinder -y 0.2 -x -0.3 -z 0.05"/>
-
-	<node name="spawn_redcylinder" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/red_cylinder.urdf -urdf -model red_cylinder -y 0.4 -x -0.3 -z 0.05"/>
-
-	<!-- Spawn the long bois -->
-	<node name="spawn_greenlong" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/green_longboi.urdf -urdf -model green_longboi -y 0 -x -0.6 -z 0.05"/>
-
-	<node name="spawn_bluelong" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/blue_longboi.urdf -urdf -model blue_longboi -y 0.2 -x -0.6 -z 0.05"/>
-
-	<node name="spawn_redlong" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/red_longboi.urdf -urdf -model red_longboi -y 0.4 -x -0.6 -z 0.05"/>
-
-	<!-- Spawn the spheres -->
-	<node name="spawn_greensphere" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/green_sphere.urdf -urdf -model green_sphere -y 0 -x 0.3 -z 0.05"/>
-
-	<node name="spawn_bluesphere" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/blue_sphere.urdf -urdf -model blue_sphere -y 0.2 -x 0.3 -z 0.05"/>
-
-	<node name="spawn_redsphere" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/red_sphere.urdf -urdf -model red_sphere -y 0.4 -x 0.3 -z 0.05"/>
-
-	<!-- Spawn the table -->
-	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/table.urdf -urdf -model table -y -1.4 -x 0.0 -z 0.0"/>
+<!-- Spawn the table -->
+	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/table.urdf -urdf -model table -y -1.6 -x 0.0 -z 0.0"/>
 	
 	<!-- Spawn the container that holds the items picked up -->
 	<node name="spawn_container" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/container.urdf -urdf -model container -y -0.8 -x 0 -z 0"/>
