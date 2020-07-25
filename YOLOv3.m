@@ -10,7 +10,7 @@ Object Detection Using YOLO v3 Deep Learning
 https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-deep-learning.html
 
 Instructions:
-    ---
+    Set names for folders with data for variable 'classes'
 
 Edit History:
 13/07/2020 created file
@@ -26,26 +26,36 @@ Edit History:
 22/07/2020 Included upsampleLayer.m and generateTargets.m file from
     Matlab\examples\deeplearning_shared\main folder. Error with
     read(preprocessedTrainingData);
+25/07/2020 Editted to use .png images in folders, not the .mat files. Also
+    recopied data augmentation and transformation functions and 
+    training network just worked.
+    Evaluation seems to create a result table that is full of empty arrays
+    ie []. still need to fix
 
 %}
 close all;
 
 %% Load and explore image data
+disp('Loading Image Data');
 % get path name
 myFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
 % collect all file paths for .mat data sets
-classes = {'Red Cube (New)','Red Cylinder','Blue Cube','Blue Cylinder'};
+classes = {'PNG Red Cube','PNG Red Cylinder','PNG Blue Cube', ...
+    'PNG Blue Cylinder','PNG Green Cube','PNG Green Cylinder'};
+% imdatastore = imageDatastore(fullfile(myFolder,... 
+%     classes), ...
+%     'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
 imdatastore = imageDatastore(fullfile(myFolder,... 
     classes), ...
-    'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
+    'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
 % boxlabelstore = boxLabelDatastore(
 classNum = size(imdatastore.Folders(:,1),1);
 % load a single .mat file
-MatData = load(imdatastore.Files{1});
+MatData = imread(imdatastore.Files{1});
 % count the number of different labels there are
 labelCount = countEachLabel(imdatastore);
 % find the dimensions of the image
-imagedimension = size(MatData.image);
+imagedimension = size(MatData);
 
 % Find folder with fewest objects, count how many images are in the folder
 labelNums = table2array(labelCount(:,2));
@@ -58,8 +68,8 @@ numTrainingFiles = round(min(labelNums) * 0.6);
 trainBoundingBox = cell(size(imdsTrain.Files,1),1);
 for cnt = 1:1:size(imdsTrain.Files,1)
     % Load an image from the training set and convert to binary image
-    MatData = load(imdsTrain.Files{cnt});
-    grey = rgb2gray(MatData.image);
+    MatData = imread(imdsTrain.Files{cnt});
+    grey = rgb2gray(MatData);
     bw = imbinarize(grey);
     % Keep the largest object
     bw = bwareafilt(bw,1);
@@ -79,8 +89,8 @@ bldsTrain = boxLabelDatastore(trainingData(:, 1:end));
 validateBoundingBox = cell(size(imdsValidation.Files,1),1);
 for cnt = 1:1:size(imdsValidation.Files,1)
     % Load an image from the validation set and convert to binary image
-    MatData = load(imdsValidation.Files{cnt});
-    grey = rgb2gray(MatData.image);
+    MatData = imread(imdsValidation.Files{cnt});
+    grey = rgb2gray(MatData);
     bw = imbinarize(grey);
     % Keep the largest object
     bw = bwareafilt(bw,1);
@@ -104,11 +114,13 @@ bldsTrain.ReadSize = miniBatchSize;
 trainingData = combine(imdsTrain, bldsTrain);
 testData = combine(imdsValidation, bldsValidate);
 
+
 %% Example to show data type used by the network
 % data = load('vehicleDatasetGroundTruth.mat');
 % vehicleDataset = data.vehicleDataset;
 
 %% Data Augmentation
+disp('Augmented Data');
 % Randomly transform training images to create multiple images using a single image and
 % label pair. Increased variety in training data increases the network
 % accuracy.
@@ -117,42 +129,45 @@ testData = combine(imdsValidation, bldsValidate);
 augmentedTrainingData = transform(trainingData,@augmentData);
 % save each augmented image to a cell, draw a rectangle to represent the
 % bounding box and show
-% augmentedData = cell(4,1);
-% for k = 1:4
-%     data = read(augmentedTrainingData);
-%     augmentedData{k} = insertShape(data{1,1},'Rectangle',data{1,2});
-%     reset(augmentedTrainingData);
-% end
-%figure
-%montage(augmentedData,'BorderSize',10)
+augmentedData = cell(4,1);
+for k = 1:4
+    data = read(augmentedTrainingData);
+    augmentedData{k} = insertShape(data{1,1},'Rectangle',data{1,2});
+    reset(augmentedTrainingData);
+end
+figure
+montage(augmentedData,'BorderSize',10)
 
 %% Preprocess Training Data
+disp('Preprocess Data');
 % specify network input size. Input size is similar to training image size.
-% Increases consistancy of images used
+% Increases consistancy of images used.
 networkInputSize = [227 227 3];
 % preprocess augmented data to prepare for training
 preprocessedTrainingData = transform(augmentedTrainingData, @(data)preprocessData(data, networkInputSize));
-
+%preprocessedTrainingData = trainingData;
 % show one image with bounding box as an example
-% data = read(preprocessedTrainingData);
-% I = data{1,1};
-% bbox = data{1,2};
-% annotatedImage = insertShape(I,'Rectangle',bbox);
-% annotatedImage = imresize(annotatedImage,2);
-% figure
-% imshow(annotatedImage)
+
+data = read(preprocessedTrainingData);
+I = data{1,1};
+bbox = data{1,2};
+annotatedImage = insertShape(I,'Rectangle',bbox);
+annotatedImage = imresize(annotatedImage,2);
+figure
+imshow(annotatedImage)
 
 %% Define YOLO v3 Network
-
+disp('Define YOLO v3 Network');
 % preprocess training data to get more consistent image size
-trainingDataForEstimation = transform(trainingData,@(data)preprocessData(data,networkInputSize));
+%trainingDataForEstimation = transform(trainingData,@(data)preprocessData(data,networkInputSize));
+
 % Specify number of anchors.
 numAnchors = 6;
 % Estimate anchor boxes and mean IoU
 % Anchor boxes are useful for deep learning object detectors and impact
 % efficienty and accuracy.
 % Mean IoU is the average Intersection-over-Union distance metric
-[anchorBoxes, meanIoU] = estimateAnchorBoxes(trainingDataForEstimation, numAnchors);
+[anchorBoxes, meanIoU] = estimateAnchorBoxes(preprocessedTrainingData, numAnchors);
 
 % Select anchor boxes to use in detection heads using anchorBoxMasks
 % Sort by size, using the 3 largest anchor boxes for first detection head and
@@ -238,7 +253,7 @@ networkOutputs = ["conv2Detection1"
 %     classificationLayer];
 
 %% Specify training options
-
+disp('Specify training options');
 % use stochastic gradient descent with momentum (SGDM). epoch is a full
 % training cycle in entire training data. Monitor network accuracy by
 % specifying validation data and frequency. Shuffle data every epoch. Train
@@ -268,60 +283,60 @@ penaltyThreshold = 0.5;
 % Used by SGDM to store velocity of gradients
 velocity = [];
 
-%% Train network [IN PROGRESS]
-
+%% Train network
+disp('Train network');
 % Train network with architecture defines by 'layers', training data and
 % training options. 
 executionEnvironment = "auto";
 net = dlnetwork(lgraph);
 
-    % Create subplots for the learning rate and mini-batch loss.
-    fig = figure;
-    [lossPlotter, learningRatePlotter] = configureTrainingProgressPlotter(fig);
-    % Custom training loop.
-    for iteration = 1:numIterations
-        % Reset datastore.
-        if ~hasdata(preprocessedTrainingData)
-            reset(preprocessedTrainingData);
-        end
-        % Read batch of data and create batch of images and
-        % ground truths.
-        data = read(preprocessedTrainingData);
-        [XTrain,YTrain] = createBatchData(data, classNames);
-        
-        % Convert mini-batch of data to dlarray.
-        XTrain = dlarray(single(XTrain),'SSCB');
-        
-        % If training on a GPU, then convert data to gpuArray.
-        if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu"
-            XTrain = gpuArray(XTrain);
-        end
-        
-        % Evaluate the model gradients and loss using dlfeval and the
-        % modelGradients function.
-        [gradients,loss,state] = dlfeval(@modelGradients, net, XTrain, YTrain, anchorBoxes, anchorBoxMasks, penaltyThreshold, networkOutputs);
-        
-        % Apply L2 regularization.
-        gradients = dlupdate(@(g,w) g + l2Regularization*w, gradients, net.Learnables);
-        
-        % Determine the current learning rate value.
-        currentLR = piecewiseLearningRateWithWarmup(iteration, learningRate, warmupPeriod, numIterations);
-        
-        % Update the network learnable parameters using the SGDM optimizer.
-        [net, velocity] = sgdmupdate(net, gradients, velocity, currentLR);
-        
-        % Update the state parameters of dlnetwork.
-        net.State = state;
-        
-        % Update training plot with new points.
-        addpoints(lossPlotter, iteration, double(gather(extractdata(loss))));
-        addpoints(learningRatePlotter, iteration, currentLR);
-        drawnow  
+% Create subplots for the learning rate and mini-batch loss.
+fig = figure;
+[lossPlotter, learningRatePlotter] = configureTrainingProgressPlotter(fig);
+% Custom training loop.
+for iteration = 1:numIterations
+    % Reset datastore.
+    if ~hasdata(preprocessedTrainingData)
+        reset(preprocessedTrainingData);
     end
+    % Read batch of data and create batch of images and
+    % ground truths.
+    data = read(preprocessedTrainingData);
+    [XTrain,YTrain] = createBatchData(data, classNames);
+
+    % Convert mini-batch of data to dlarray.
+    XTrain = dlarray(single(XTrain),'SSCB');
+
+    % If training on a GPU, then convert data to gpuArray.
+    if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu"
+        XTrain = gpuArray(XTrain);
+    end
+
+    % Evaluate the model gradients and loss using dlfeval and the
+    % modelGradients function.
+    [gradients,loss,state] = dlfeval(@modelGradients, net, XTrain, YTrain, anchorBoxes, anchorBoxMasks, penaltyThreshold, networkOutputs);
+
+    % Apply L2 regularization.
+    gradients = dlupdate(@(g,w) g + l2Regularization*w, gradients, net.Learnables);
+
+    % Determine the current learning rate value.
+    currentLR = piecewiseLearningRateWithWarmup(iteration, learningRate, warmupPeriod, numIterations);
+
+    % Update the network learnable parameters using the SGDM optimizer.
+    [net, velocity] = sgdmupdate(net, gradients, velocity, currentLR);
+
+    % Update the state parameters of dlnetwork.
+    net.State = state;
+
+    % Update training plot with new points.
+    addpoints(lossPlotter, iteration, double(gather(extractdata(loss))));
+    addpoints(learningRatePlotter, iteration, currentLR);
+    drawnow  
+end
 % net = trainNetwork(imdsTrain,layers,options);
 
 %% Evaluate Model
-
+disp('Evaluate Model');
 confidenceThreshold = 0.5;
 overlapThreshold = 0.5;
 
@@ -330,14 +345,16 @@ preprocessedTestData = transform(testData,@(data)preprocessData(data,networkInpu
 
 % Create a table to hold the bounding boxes, scores, and labels returned by
 % the detector. 
-numImages = size(testDataTbl,1);
+numImages = size(validationData,1);
 results = table('Size',[numImages 3],...
     'VariableTypes',{'cell','cell','cell'},...
     'VariableNames',{'Boxes','Scores','Labels'});
 
 % Run detector on each image in the test set and collect results.
 for i = 1:numImages
-    
+%     if ~hasdata(preprocessedTestData)
+%         reset(preprocessedTestData);
+%     end
     % Read the datastore and get the image.
     data = read(preprocessedTestData);
     I = data{1};
@@ -368,11 +385,11 @@ ylabel('Precision')
 grid on
 title(sprintf('Average Precision = %.2f', ap))
 %% Predict labels of new data and calculate classification accuracy
-
-YPred = classify(net,imdsValidation);
-YValidation = imdsValidation.Labels;
-
-accuracy = sum(YPred == YValidation)/numel(YValidation);
+% 
+% YPred = classify(net,imdsValidation);
+% YValidation = imdsValidation.Labels;
+% 
+% accuracy = sum(YPred == YValidation)/numel(YValidation);
 
 %% Classify Image
 
@@ -393,11 +410,11 @@ accuracy = sum(YPred == YValidation)/numel(YValidation);
 %% Functions
 
 % function to read images from .mat files
-function data = matRead(filename)
-inp = load(filename);
-f = fields(inp);
-data = inp.(f{3});
-end
+% function data = matRead(filename)
+% inp = load(filename);
+% f = fields(inp);
+% data = inp.(f{3});
+% end
 
 function [gradients, totalLoss, state] = modelGradients(net, XTrain, YTrain, anchors, mask, penaltyThreshold, networkOutputs)
 inputImageSize = size(XTrain,1:2);
@@ -485,7 +502,7 @@ for ii = 1:size(A,1)
     I = imwarp(I,tform,'OutputView',rout);
     
     % Apply same transform to boxes.
-    [bboxes,indices] = bboxwarp(bboxes,tform,rout);
+    [bboxes,indices] = bboxwarp(bboxes,tform,rout,'OverlapThreshold',0.25);
     labels = labels(indices);
     
     % Return original data only when all boxes are removed by warping.
