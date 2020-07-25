@@ -18,20 +18,22 @@
 			<pose>1 1 1 0.000000 0 0</pose>
 		</include>
 
-		<!-- testing mesh -->
-		<!--model name="my_mesh">
-			<pose>0 4 0 0.000000 0 0</pose>
-			<static>true</static>
-			<link name="body">
-				<visual name="visual">
-					<geometry>
-						<mesh><uri>file://20255_Triangular_Prism_V1.dae</mesh>
-					</geomtry>
-				</visual>
-			</link>
-		</model-->
-             
+             	<population name ="green_cube_pop">
+			<model name="green_cube_model">
+				<include>
+					<static>true</static>
+					<uri>model://green_cube</uri>
+				</include>
+			</model>
+			<pose>0 5 0 0 0 0</pose>
+			<box>
+				<size>2 1 0.01</size>
+			</box>
+			<model_count>3</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
 
-		
 	</world>
 </sdf>
