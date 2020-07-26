@@ -24,11 +24,16 @@ classes = {'PNG Multiple Objects'};
 imdatastore = imageDatastore(fullfile(myFolder,... 
     classes), ...
     'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
-data = read(imdatastore);
+data = readimage(imdatastore,5);
 img = data;
 
+se = strel('disk',8);
 img_grey = rgb2gray(img);
-img_bw = imbinarize(img_grey);
+img_bw = imbinarize(img_grey,'adaptive','ForegroundPolarity','dark','Sensitivity',0.9);
+img_bw = imclose(img_bw,se);
+se = strel('disk',6);
+img_bw = imerode(img_bw,se);
+img_bw = imfill(img_bw,'holes');
 figure(1);
 imshow(img_bw);
 
