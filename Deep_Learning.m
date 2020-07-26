@@ -21,6 +21,7 @@ Instructions:
 13/07/2020 changed to use image data store, successfully trained neural
     network.
 14/07/2020 trained using red cubes and blue cylinders
+25/07/2020 trained using PNG folders
 
 %}
 
@@ -28,49 +29,30 @@ Instructions:
 close all;
 
 %% Load and explore image data
-
-% folder location
-% myFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data\Red Cube (straight)';
-% % get path for any file of type .mat
-% digitDatasetPath = myFolder + "\*.mat";
-% 
-% % Obtain a list of all the files of type .mat
-% imds = dir(digitDatasetPath);
-% Imdata = zeros(length(imds),1);
-% images = {};
-% imageLabels = {};
-% 
-% % copy all image sets to a cell
-% for k = 1:length(imds)
-%   baseFileName = imds(k).name;
-%   fullFileName = fullfile(myFolder, baseFileName);
-%   MatData = load(fullFileName);
-%   images = cat(1,images,MatData.image);
-%   imageLabels = cat(1,imageLabels, 'red cube');
-% end
-% ImageWithLabels = cat(2,images,imageLabels);
-% test = cell2mat(images(:,1));
-% imshow(test);
-
+classes = {'PNG Red Cube','PNG Red Cylinder','PNG Blue Cube', ...
+    'PNG Blue Cylinder','PNG Green Cube','PNG Green Cylinder'};
 % get path name
 myFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
-% collect all file paths for .mat data sets
-imdatastore = imageDatastore(fullfile(myFolder,... 
-    {'Red Cube (New)','Red Cylinder','Blue Cube','Blue Cylinder'} ...
-    ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
+% collect all file paths for .png data sets
+imdatastore = imageDatastore(fullfile(myFolder,classes ...
+    ), 'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
 classes = size(imdatastore.Folders(:,1),1);
-% load a single .mat file
-MatData = load(imdatastore.Files{1});
+% load a single image
+MatData = imread(imdatastore.Files{1});
 % show an image for testing purposes
-imshow(MatData.image);
+imshow(MatData);
 
 % count the number of different labels there are
 labelCount = countEachLabel(imdatastore);
 % find the dimensions of the image
-imagedimension = size(MatData.image);
+imagedimension = size(MatData);
+
+% Find folder with fewest objects, count how many images are in the folder
+labelNums = table2array(labelCount(:,2));
+% Define how many images will be used for training
+numTrainingFiles = round(min(labelNums) * 0.6);
 
 %separate image sets for training and validation
-numTrainingFiles = 33;
 [imdsTrain,imdsValidation] = splitEachLabel(imdatastore,numTrainingFiles,'randomize');
 
 %% Define network architecture
@@ -102,6 +84,18 @@ layers = [
     batchNormalizationLayer
     reluLayer
     
+    maxPooling2dLayer(2,'Stride',2)
+    
+    convolution2dLayer(3,64,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    maxPooling2dLayer(2,'Stride',2)
+    
+    convolution2dLayer(3,128,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
     % one final fully connected layer. Neurons connect to all neurons in
     % preceding layer. combine previous features to classify image.
     % OutputSize param is number of classes in target data.
@@ -126,11 +120,12 @@ layers = [
 % Show training progress plot and turn off command window output
 options = trainingOptions('sgdm', ...
     'InitialLearnRate',0.01, ...
-    'MiniBatchSize',64, ...
-    'MaxEpochs',20, ...
+    'LearnRateSchedule', 'piecewise', ...
+    'MiniBatchSize',16, ...
+    'MaxEpochs',40, ...
     'Shuffle','every-epoch', ...
     'ValidationData',imdsValidation, ...
-    'ValidationFrequency',5, ...
+    'ValidationFrequency',30, ...
     'Verbose',false, ...
     'ExecutionEnvironment','auto', ...
     'Plots','training-progress');
@@ -153,21 +148,21 @@ accuracy = sum(YPred == YValidation)/numel(YValidation);
 
 % get path name
 multiFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
-% collect all file paths for .mat data sets
+% collect all file paths for .png data sets
 multidatastore = imageDatastore(fullfile(multiFolder,... 
-    {'Cubes and Cylinders'} ...
-    ), 'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
+    {'PNG Multiple Objects'} ...
+    ), 'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
 
 % load a single .mat file
-MatData = load(multidatastore.Files{1});
+MatData = imread(multidatastore.Files{1});
 % show an image for testing purposes
-imshow(MatData.image);
+imshow(MatData);
 
 YPred1 = classify(net,multidatastore);
 
 %% function to read images from .mat files
-function data = matRead(filename)
-inp = load(filename);
-f = fields(inp);
-data = inp.(f{3});
-end
+% function data = matRead(filename)
+% inp = load(filename);
+% f = fields(inp);
+% data = inp.(f{3});
+% end
