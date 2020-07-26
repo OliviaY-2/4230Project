@@ -11,6 +11,10 @@ https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-dee
 
 Instructions:
     Set names for folders with data for variable 'classes'
+    Set 'doTraining' variable if you want to train a network or used a
+    pretrained one
+    In load data, set value for DataTable to either use custom images or
+    try out with vehicle images given by example
 
 Edit History:
 13/07/2020 created file
@@ -31,9 +35,15 @@ Edit History:
     training network just worked.
     Evaluation seems to create a result table that is full of empty arrays
     ie []. still need to fix
+26/07/2020 redid bounding boxes using 'Image Labeller' app. Then created a
+    table with bounding boxes and image file paths, similar to example data
+    given. Also ran using example data with vehicles, which appears to work
+    fine.
+    
 
 %}
 close all;
+clc;
 %% Determine if pretrained data should be used
 
 doTraining = true;
@@ -44,8 +54,13 @@ if ~doTraining
         websave('yolov3SqueezeNetVehicleExample_20a.mat', pretrainedURL);
     end
     pretrained = load("yolov3SqueezeNetVehicleExample_20a.mat");
-    net1 = pretrained.net;
+    net = pretrained.net;
 end
+%% Example to show data type used by the network
+unzip vehicleDatasetImages.zip
+data = load('vehicleDatasetGroundTruth.mat');
+vehicleDataset = data.vehicleDataset;
+vehicleDataset.imageFilename = fullfile(pwd,vehicleDataset.imageFilename);
 
 %% Load and explore image data
 disp('Loading Image Data');
@@ -54,85 +69,42 @@ myFolder = '.\RGBD_Data';
 % collect all file paths for .mat data sets
 classes = {'PNG Red Cube','PNG Red Cylinder','PNG Blue Cube', ...
     'PNG Blue Cylinder','PNG Green Cube','PNG Green Cylinder'};
-% imdatastore = imageDatastore(fullfile(myFolder,... 
-%     classes), ...
-%     'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead); 
+% Grab all the images in the folder and store in a single folder
 imdatastore = imageDatastore(fullfile(myFolder,... 
     classes), ...
     'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
-% % boxlabelstore = boxLabelDatastore(
-% classNum = size(imdatastore.Folders(:,1),1);
-% % load a single .mat file
-% MatData = imread(imdatastore.Files{1});
-% % count the number of different labels there are
-% labelCount = countEachLabel(imdatastore);
-% % find the dimensions of the image
-% imagedimension = size(MatData);
-% 
-% % Find folder with fewest objects, count how many images are in the folder
-% labelNums = table2array(labelCount(:,2));
-% % Define how many images will be used for training
-% numTrainingFiles = round(min(labelNums) * 0.6);
-% % separate image sets for training and validation
+% load bounding boxes obtained using image labeling app
 boundingBoxes = load('FullSetBoundingBoxes.mat');
-%[imdsTrain,imdsValidation] = splitEachLabel(imdatastore,numTrainingFiles,'randomize');
+
+% Create a combined table of all the data
 DataTable = [cell2table(imdatastore.Files) boundingBoxes.gTruth.LabelData];
-[imds, bxds] = objectDetectorTrainingData(boundingBoxes.gTruth);
-trainingDataTest = combine(imds, bxds);
-% create cell array of boundary box coordinates for training data
-% trainBoundingBox = cell(size(imdsTrain.Files,1),1);
-% for cnt = 1:1:size(imdsTrain.Files,1)
-%     % Load an image from the training set and convert to binary image
-%     MatData = imread(imdsTrain.Files{cnt});
-%     grey = rgb2gray(MatData);
-%     bw = imbinarize(grey);
-%     % Keep the largest object
-%     bw = bwareafilt(bw,1);
-%     % imshow(bw);
-%     % Calculate values for bounding box
-%     boundingBox = regionprops(bw,'BoundingBox');
-%     % Store values in an cell
-%     trainBoundingBox(cnt,:) = {[round(boundingBox.BoundingBox(1)), ...
-%         round(boundingBox.BoundingBox(2)),boundingBox.BoundingBox(3),boundingBox.BoundingBox(4)]};%struct2cell(boundingBox);
-% end
-% % Convert cell array to a single table column
-% trainingData = table(trainBoundingBox);
-% % Create data store of bounding boxes
-% bldsTrain = boxLabelDatastore(trainingData(:, 1:end));
-% 
-% % create cell array of boundary box coordinates for valdiation data
-% validateBoundingBox = cell(size(imdsValidation.Files,1),1);
-% for cnt = 1:1:size(imdsValidation.Files,1)
-%     % Load an image from the validation set and convert to binary image
-%     MatData = imread(imdsValidation.Files{cnt});
-%     grey = rgb2gray(MatData);
-%     bw = imbinarize(grey);
-%     % Keep the largest object
-%     bw = bwareafilt(bw,1);
-%     % imshow(bw);
-%     % Calculate values for bounding box
-%     boundingBox = regionprops(bw,'BoundingBox');
-%     % Store values in an cell and round decimal values to an integar
-%     validateBoundingBox(cnt,:) = {[round(boundingBox.BoundingBox(1)), ...
-%         round(boundingBox.BoundingBox(2)),boundingBox.BoundingBox(3),boundingBox.BoundingBox(4)]};
-% end
-% % Convert cell array to a single table column
-% validationData = table(validateBoundingBox);
-% % Create data store of bounding boxes
-% bldsValidate = boxLabelDatastore(validationData(:, 1:end));
-% 
-% % Set batch size values
-% miniBatchSize = 8;
-% imdsTrain.ReadSize = miniBatchSize;
-% bldsTrain.ReadSize = miniBatchSize;
-% % Combine data stores
-% trainingData = combine(imdsTrain, bldsTrain);
-% testData = combine(imdsValidation, bldsValidate);
+DataTable.Properties.VariableNames{1} = 'imageFilename';
+%DataTable(~cellfun('isempty',DataTable));
+% [imds, bxds] = objectDetectorTrainingData(boundingBoxes.gTruth);
+% trainingDataTest = combine(imds, bxds);
+% DataTable = vehicleDataset;
+% Split data into training set and evaluation tables
+rng(0);
+shuffledIndices = randperm(height(DataTable));
+idx = floor(0.6 * length(shuffledIndices));
+trainingDataTbl = DataTable(shuffledIndices(1:idx),:);
+testDataTbl = DataTable(shuffledIndices(idx+1:end),:);
 
+% Create image datastore
+imdsTrain = imageDatastore(trainingDataTbl.imageFilename);
+imdsTest = imageDatastore(testDataTbl.imageFilename);
 
-%% Example to show data type used by the network
-% data = load('vehicleDatasetGroundTruth.mat');
-% vehicleDataset = data.vehicleDataset;
+% Create datastore for bounding boxes
+bldsTrain = boxLabelDatastore(trainingDataTbl(:, 2:end));
+bldsTest = boxLabelDatastore(testDataTbl(:, 2:end));
+
+miniBatchSize = 8;
+imdsTrain.ReadSize = miniBatchSize;
+bldsTrain.ReadSize = miniBatchSize;
+
+trainingData = combine(imdsTrain, bldsTrain);
+testData = combine(imdsTest,bldsTest);
+
 
 %% Data Augmentation
 disp('Augmented Data');
@@ -141,7 +113,7 @@ disp('Augmented Data');
 % accuracy.
 
 % transform data with functions given by tutorial and save in datastore
-augmentedTrainingData = transform(trainingDataTest,@augmentData);
+augmentedTrainingData = transform(trainingData,@augmentData);
 % save each augmented image to a cell, draw a rectangle to represent the
 % bounding box and show
 augmentedData = cell(4,1);
@@ -159,7 +131,7 @@ disp('Preprocess Data');
 % Increases consistancy of images used.
 networkInputSize = [227 227 3];
 % preprocess augmented data to prepare for training
-preprocessedTrainingData = transform(trainingDataTest, @(data)preprocessData(data, networkInputSize));
+preprocessedTrainingData = transform(augmentedTrainingData, @(data)preprocessData(data, networkInputSize));
 %preprocessedTrainingData = trainingData;
 % show one image with bounding box as an example
 
@@ -174,7 +146,7 @@ imshow(annotatedImage)
 %% Define YOLO v3 Network
 disp('Define YOLO v3 Network');
 % preprocess training data to get more consistent image size
-trainingDataForEstimation = transform(trainingDataTest,@(data)preprocessData(data,networkInputSize));
+trainingDataForEstimation = transform(trainingData,@(data)preprocessData(data,networkInputSize));
 
 % Specify number of anchors.
 numAnchors = 6;
@@ -205,7 +177,7 @@ lgraph = squeezenetFeatureExtractor(baseNetwork, networkInputSize);
 % prediction elements per anchor box
 % add detection heads to feature extraction network
 
-classNames = classes;
+classNames = trainingDataTbl.Properties.VariableNames(2:end);
 numClasses = size(classNames,2);
 numPredictorsPerAnchor = 5 + numClasses;
 lgraph = addFirstDetectionHead(lgraph, anchorBoxMasks{1}, numPredictorsPerAnchor);
@@ -226,68 +198,11 @@ lgraph = connectLayers(lgraph,'fire5-concat','depthConcat1Detection2/in2');
 networkOutputs = ["conv2Detection1"
     "conv2Detection2"
     ];
-% %% Define network architecture
-% layers = [
-%     imageInputLayer(imagedimension)
-%     
-%     % set filter size, number of filters, add padding to input feature map,
-%     % make spatial output size equal the input size.
-%     convolution2dLayer(3,8,'Padding','same')
-%     % normalise activations and gradients propagating through network for
-%     % easier optimisation
-%     batchNormalizationLayer
-%     % nonlinear activation using rectified linear unit (ReLU)
-%     reluLayer
-%     
-%     % down-sample to reduce spatial size of feature map and remove
-%     % redundant spatial info. Specify max value of rectangular regions of
-%     % inputs, set step size using stride for when training function scans 
-%     %along input.
-%     maxPooling2dLayer(2,'Stride',2)
-%     
-%     convolution2dLayer(3,16,'Padding','same')
-%     batchNormalizationLayer
-%     reluLayer
-%     
-%     maxPooling2dLayer(2,'Stride',2)
-%     
-%     convolution2dLayer(3,32,'Padding','same')
-%     batchNormalizationLayer
-%     reluLayer
-%     
-%     % one final fully connected layer. Neurons connect to all neurons in
-%     % preceding layer. combine previous features to classify image.
-%     % OutputSize param is number of classes in target data.
-%     fullyConnectedLayer(classes)
-%     % normalise output of fully connected layer. Output of positive numbers
-%     % that sum to one, used for classification probabilities by
-%     % classification layer
-%     softmaxLayer
-%     % assign input to one of the mutually exclusive classes and compute
-%     % loss.
-%     classificationLayer];
 
 %% Specify training options
 disp('Specify training options');
-% use stochastic gradient descent with momentum (SGDM). epoch is a full
-% training cycle in entire training data. Monitor network accuracy by
-% specifying validation data and frequency. Shuffle data every epoch. Train
-% network on training data and calculate accuracy on validation data at
-% regular intervals during training. 
-% GPU is used if Parallel Computing Toolbox is available and CUDA enabled 
-% GPU with compute capability >=3.0
-% Show training progress plot and turn off command window output
-% options = trainingOptions('sgdm', ...
-%     'InitialLearnRate',0.01, ...
-%     'MaxEpochs',4, ...
-%     'Shuffle','every-epoch', ...
-%     'ValidationData',imdsValidation, ...
-%     'ValidationFrequency',30, ...
-%     'Verbose',false, ...
-%     'ExecutionEnvironment','auto', ...
-%     'Plots','training-progress');
 
-numIterations = 1000;
+numIterations = 2000;
 learningRate = 0.001;
 % warmup period = number of iterations to increase learning rate
 %   exponentially based on formula: 
@@ -299,11 +214,11 @@ penaltyThreshold = 0.5;
 velocity = [];
 
 %% Train network
+disp('Train network');
+executionEnvironment = "auto";
 if doTraining
-    disp('Train network');
     % Train network with architecture defines by 'layers', training data and
     % training options. 
-    executionEnvironment = "auto";
     net = dlnetwork(lgraph);
 
     % Create subplots for the learning rate and mini-batch loss.
@@ -350,11 +265,10 @@ if doTraining
         drawnow  
     end
 end
-% net = trainNetwork(imdsTrain,layers,options);
 
 %% Evaluate Model
 disp('Evaluate Model');
-confidenceThreshold = 0.1;
+confidenceThreshold = 0.5;
 overlapThreshold = 0.5;
 
 % Create the test datastore.
@@ -362,16 +276,14 @@ preprocessedTestData = transform(testData,@(data)preprocessData(data,networkInpu
 
 % Create a table to hold the bounding boxes, scores, and labels returned by
 % the detector. 
-numImages = size(validationData,1);
+numImages = size(testDataTbl,1);
 results = table('Size',[numImages 3],...
     'VariableTypes',{'cell','cell','cell'},...
     'VariableNames',{'Boxes','Scores','Labels'});
 
 % Run detector on each image in the test set and collect results.
 for i = 1:numImages
-%     if ~hasdata(preprocessedTestData)
-%         reset(preprocessedTestData);
-%     end
+    
     % Read the datastore and get the image.
     data = read(preprocessedTestData);
     I = data{1};
