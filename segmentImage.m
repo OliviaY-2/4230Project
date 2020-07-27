@@ -11,12 +11,16 @@ Instructions:
     change 'myFolder' to choose the folder with all the images
     change 'classes' variable to choose which folders to use
 Edit History:
-    26/07/2020 create file. Doesn't work with custom images
+    26/07/2020 create file. Show each object as an individual image.
+    27/07/2020 create cell array with all the individual images. Also
+        resize image.
 %}
 
 close all;
 clc;
 dbstop if error
+
+%% Obtain images
 myFolder = '.\RGBD_Data';
 % collect all file paths for .mat data sets
 classes = {'PNG Multiple Objects'};
@@ -27,7 +31,7 @@ imdatastore = imageDatastore(fullfile(myFolder,...
 % Take a single image
 data = readimage(imdatastore,5);
 img = data;
-
+%% Create mask 
 % Convert to binary image. Set sensitivity to detect the dark blue objects
 % with the black background
 img_grey = rgb2gray(img);
@@ -43,7 +47,7 @@ img_bw = imfill(img_bw,'holes');
 
 figure(1);
 imshow(img_bw);
-
+%% locate individual objects in image
 % Find centroids
 stats = regionprops(img_bw,'centroid');
 % Draw centroids on image
@@ -56,6 +60,10 @@ hold off
 % Create separate image for each object
 numObjects = size(centroids, 1);
 centroids = round(centroids);
+
+%% Create each image
+miniImages = [];
+cellArrayOfImages = cell(1,numObjects);
 for cnt = 1:numObjects
     % Set values to obtain pixels surrounding centroid position
     % Set x values
@@ -75,8 +83,13 @@ for cnt = 1:numObjects
         yRight = 640; end
     % Obtain pixels in defines area
     section = img(xLeft:xRight,yLeft:yRight,:);
-    % Show image
-    figure(cnt + 3);
+    % Resize image
+    resizeImage = imresize(section,[255 255]);
+    % Store in cell array
+    cellArrayOfImages{cnt} = resizeImage;
+    figure();
     imshow(section);
+    figure();
+    imshow(resizeImage);
 end
 
