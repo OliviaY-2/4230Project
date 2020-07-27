@@ -16,22 +16,25 @@ Instructions:
     Set 'ipaddress' to appropriate address for connection to ROS topic.
     Change 'myFolder' to choose the folder with all the images.
     Change 'classes' variable to choose which folders to use.
+    Change 'net' to a pretrained deep learning network
 Edit History:
     26/07/2020 create file. Show each object as an individual image.
     27/07/2020 create cell array with all the individual images. Also
-        resize image. Added ROS connection option
+        resize image. Added ROS connection option. Added classification
+        with pretrained network.
 %}
 
 close all;
 clc;
-dbstop if error
 
 rosConnection = false;
-imgSize = [255 255];
+imgSize = [227 227];
 ipaddress = '192.168.1.118';
 myFolder = '.\RGBD_Data';
-classes = {'PNG Multiple Objects'};
-
+classes = 'PNG Multiple Objects';
+net = load('net.mat','net');
+colour = 'red';
+pause(1);
 %% Obtain images 
 % from .mat file
 if rosConnection == 0
@@ -42,7 +45,7 @@ if rosConnection == 0
         classes), ...
         'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
     % Take a single image
-    img = readimage(imdatastore,5);
+    img = readimage(imdatastore,1);
 else
     % Obtain Image from ROS topic
     robotType = 'Gazebo';
@@ -72,7 +75,7 @@ end
 img_grey = rgb2gray(img);
 img_bw = imbinarize(img_grey,'adaptive','ForegroundPolarity','dark','Sensitivity',0.9);
 % separate images more
-se = strel('disk',8);
+se = strel('disk',10);
 img_bw = imclose(img_bw,se);
 % Separate images and remove some noise
 se = strel('disk',6);
@@ -99,6 +102,7 @@ centroids = round(centroids);
 %% Create each image
 miniImages = [];
 cellArrayOfImages = cell(1,numObjects);
+YPred = cell(1,numObjects);
 for cnt = 1:numObjects
     % Set values to obtain pixels surrounding centroid position
     % Set x values
@@ -118,11 +122,21 @@ for cnt = 1:numObjects
         yRight = 640; end
     % Obtain pixels in defines area
     section = img(xLeft:xRight,yLeft:yRight,:);
-    % Resize image
-    resizeImage = imresize(section,imgSize);
     % Store in cell array
-    cellArrayOfImages{cnt} = resizeImage;
+    cellArrayOfImages{cnt} = section;
     figure();
-    imshow(resizeImage);
+    imshow(section);
+    resizeImage = imresize(section,imgSize);
+    YPred{cnt} = classify(net.net,resizeImage);
+    title(YPred{cnt});
 end
+
+%% Deep Learning Network
+% for cnt = 1:numObjects
+%     image = cell2mat(cellArrayOfImages(1));
+%     % Resize image
+%     resizeImage = imresize(image,imgSize);
+%     YPred = classify(net.net,resizeImage);
+% end
+
 
