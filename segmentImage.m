@@ -6,31 +6,61 @@ Taking a .mat file created using ROS_Connect.m, the objects in the image
 will be separated as individual images
 
 Reference:
-
+    
 Instructions:
-    change 'myFolder' to choose the folder with all the images
-    change 'classes' variable to choose which folders to use
+    Set 'rosConnection' to false if you want to use images from a file and
+    true if you want to obtain images from the simulated camera in Gazebo
+    simulation.
+    Set 'imgSize' to desired image dimension when feeding into neural
+    network.
+    Set 'ipaddress' to appropriate address for connection to ROS topic.
+    Change 'myFolder' to choose the folder with all the images.
+    Change 'classes' variable to choose which folders to use.
 Edit History:
     26/07/2020 create file. Show each object as an individual image.
     27/07/2020 create cell array with all the individual images. Also
-        resize image.
+        resize image. Added ROS connection option
 %}
 
 close all;
 clc;
 dbstop if error
 
-%% Obtain images
+rosConnection = false;
+imgSize = [255 255];
+ipaddress = '192.168.1.118';
 myFolder = '.\RGBD_Data';
-% collect all file paths for .mat data sets
 classes = {'PNG Multiple Objects'};
-% Grab all the images in the folder and store in a single folder
-imdatastore = imageDatastore(fullfile(myFolder,... 
-    classes), ...
-    'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
-% Take a single image
-data = readimage(imdatastore,5);
-img = data;
+
+%% Obtain images 
+% from .mat file
+if rosConnection == 0
+    disp(['Obtain image from ',myFolder]);
+    % collect all file paths for .mat data sets
+    % Grab all the images in the folder and store in a single folder
+    imdatastore = imageDatastore(fullfile(myFolder,... 
+        classes), ...
+        'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
+    % Take a single image
+    img = readimage(imdatastore,5);
+else
+    % Obtain Image from ROS topic
+    robotType = 'Gazebo';
+    rosshutdown;
+    rosinit(ipaddress);
+    blockposes = rossubscriber('/gazebo/link_states');
+    pause(2);
+    disp("Getting new image..");
+    tic
+    posdata = receive(blockposes, 10);
+    imsub = rossubscriber('/camera/color/image_raw');
+    pcsub = rossubscriber('/camera/depth/points');
+    pause(2);
+    img = readImage(imsub.LatestMessage);
+    % plot the depth data with rgb
+    depthxyz = readXYZ(pcsub.LatestMessage);
+    depthrgb = readRGB(pcsub.LatestMessage);
+end
 %% Create mask 
 % Convert to binary image. Set sensitivity to detect the dark blue objects
 % with the black background
@@ -84,11 +114,9 @@ for cnt = 1:numObjects
     % Obtain pixels in defines area
     section = img(xLeft:xRight,yLeft:yRight,:);
     % Resize image
-    resizeImage = imresize(section,[255 255]);
+    resizeImage = imresize(section,imgSize);
     % Store in cell array
     cellArrayOfImages{cnt} = resizeImage;
-    figure();
-    imshow(section);
     figure();
     imshow(resizeImage);
 end
