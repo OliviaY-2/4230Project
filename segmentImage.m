@@ -21,7 +21,8 @@ Edit History:
     26/07/2020 create file. Show each object as an individual image.
     27/07/2020 create cell array with all the individual images. Also
         resize image. Added ROS connection option. Added classification
-        with pretrained network.
+        with pretrained network. Added functions to create colour masked
+        images
 %}
 
 close all;
@@ -33,7 +34,7 @@ ipaddress = '192.168.1.118';
 myFolder = '.\RGBD_Data';
 classes = 'PNG Multiple Objects';
 net = load('net.mat','net');
-colour = 'red';
+desiredColour = 'all';
 pause(1);
 %% Obtain images 
 % from .mat file
@@ -45,7 +46,7 @@ if rosConnection == 0
         classes), ...
         'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
     % Take a single image
-    img = readimage(imdatastore,1);
+    img = readimage(imdatastore,2);
 else
     % Obtain Image from ROS topic
     robotType = 'Gazebo';
@@ -72,8 +73,20 @@ end
 %% Create mask 
 % Convert to binary image. Set sensitivity to detect the dark blue objects
 % with the black background
-img_grey = rgb2gray(img);
+switch desiredColour
+    case 'red'
+        [BW,img_masked] = createREDMask(img);
+    case 'green'
+        [BW,img_masked] = createGREENMask(img);
+    case 'blue'
+        [BW,img_masked] = createBLUEMask(img);
+    case 'all'
+        img_masked = img;
+end
+img_grey = rgb2gray(img_masked);
 img_bw = imbinarize(img_grey,'adaptive','ForegroundPolarity','dark','Sensitivity',0.9);
+img_bw = bwareaopen(img_bw, 3000);
+img_bw = bwpropfilt(img_bw, 'Eccentricity', 10); 
 % separate images more
 se = strel('disk',10);
 img_bw = imclose(img_bw,se);
@@ -100,37 +113,38 @@ numObjects = size(centroids, 1);
 centroids = round(centroids);
 
 %% Create each image
-miniImages = [];
-cellArrayOfImages = cell(1,numObjects);
-YPred = cell(1,numObjects);
-for cnt = 1:numObjects
-    % Set values to obtain pixels surrounding centroid position
-    % Set x values
-    xLeft = centroids(cnt,2) - 80; 
-    % additional condition for the edge of the image
-    if (xLeft <= 0)
-        xLeft = 1; end
-    xRight = centroids(cnt,2) + 80; 
-    if (xRight >= 480)
-        xRight = 480; end
-    % Set y values
-    yLeft = centroids(cnt,1) - 80; 
-    if (yLeft <= 0) 
-        yLeft = 1; end    
-    yRight = centroids(cnt,1) + 80; 
-    if (yRight >= 640)
-        yRight = 640; end
-    % Obtain pixels in defines area
-    section = img(xLeft:xRight,yLeft:yRight,:);
-    % Store in cell array
-    cellArrayOfImages{cnt} = section;
-    figure();
-    imshow(section);
-    resizeImage = imresize(section,imgSize);
-    YPred{cnt} = classify(net.net,resizeImage);
-    title(YPred{cnt});
+if centroids ~= 0
+    miniImages = [];
+    cellArrayOfImages = cell(1,numObjects);
+    YPred = cell(1,numObjects);
+    for cnt = 1:numObjects
+        % Set values to obtain pixels surrounding centroid position
+        % Set x values
+        xLeft = centroids(cnt,2) - 80; 
+        % additional condition for the edge of the image
+        if (xLeft <= 0)
+            xLeft = 1; end
+        xRight = centroids(cnt,2) + 80; 
+        if (xRight >= 480)
+            xRight = 480; end
+        % Set y values
+        yLeft = centroids(cnt,1) - 80; 
+        if (yLeft <= 0) 
+            yLeft = 1; end    
+        yRight = centroids(cnt,1) + 80; 
+        if (yRight >= 640)
+            yRight = 640; end
+        % Obtain pixels in defines area
+        section = img(xLeft:xRight,yLeft:yRight,:);
+        % Store in cell array
+        cellArrayOfImages{cnt} = section;
+        figure();
+        imshow(section);
+        resizeImage = imresize(section,imgSize);
+        YPred{cnt} = classify(net.net,resizeImage);
+        title(YPred{cnt});
+    end
 end
-
 %% Deep Learning Network
 % for cnt = 1:numObjects
 %     image = cell2mat(cellArrayOfImages(1));
@@ -138,5 +152,97 @@ end
 %     resizeImage = imresize(image,imgSize);
 %     YPred = classify(net.net,resizeImage);
 % end
+%% Functions
 
+function [BW,maskedRGBImage] = createREDMask(RGB)
+
+% Convert RGB image to chosen color space
+I = rgb2hsv(RGB);
+
+% Define thresholds for channel 1 based on histogram settings
+channel1Min = 0.770;
+channel1Max = 0.226;
+
+% Define thresholds for channel 2 based on histogram settings
+channel2Min = 0.210;
+channel2Max = 1.000;
+
+% Define thresholds for channel 3 based on histogram settings
+channel3Min = 0.000;
+channel3Max = 1.000;
+
+% Create mask based on chosen histogram thresholds
+sliderBW = ( (I(:,:,1) >= channel1Min) | (I(:,:,1) <= channel1Max) ) & ...
+    (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+    (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+BW = sliderBW;
+
+% Initialize output masked image based on input image.
+maskedRGBImage = RGB;
+
+% Set background pixels where BW is false to zero.
+maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+end
+
+function [BW,maskedRGBImage] = createGREENMask(RGB)
+
+% Convert RGB image to chosen color space
+I = rgb2hsv(RGB);
+
+% Define thresholds for channel 1 based on histogram settings
+channel1Min = 0.073;
+channel1Max = 0.628;
+
+% Define thresholds for channel 2 based on histogram settings
+channel2Min = 0.000;
+channel2Max = 1.000;
+
+% Define thresholds for channel 3 based on histogram settings
+channel3Min = 0.210;
+channel3Max = 1.000;
+
+% Create mask based on chosen histogram thresholds
+sliderBW = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max) & ...
+    (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+    (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+BW = sliderBW;
+
+% Initialize output masked image based on input image.
+maskedRGBImage = RGB;
+
+% Set background pixels where BW is false to zero.
+maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+
+end
+
+function [BW,maskedRGBImage] = createBLUEMask(RGB)
+
+% Convert RGB image to chosen color space
+I = rgb2hsv(RGB);
+
+% Define thresholds for channel 1 based on histogram settings
+channel1Min = 0.448;
+channel1Max = 0.929;
+
+% Define thresholds for channel 2 based on histogram settings
+channel2Min = 0.000;
+channel2Max = 1.000;
+
+% Define thresholds for channel 3 based on histogram settings
+channel3Min = 0.210;
+channel3Max = 1.000;
+
+% Create mask based on chosen histogram thresholds
+sliderBW = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max) & ...
+    (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+    (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+BW = sliderBW;
+
+% Initialize output masked image based on input image.
+maskedRGBImage = RGB;
+
+% Set background pixels where BW is false to zero.
+maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+
+end
 
