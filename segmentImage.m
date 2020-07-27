@@ -55,11 +55,16 @@ else
     posdata = receive(blockposes, 10);
     imsub = rossubscriber('/camera/color/image_raw');
     pcsub = rossubscriber('/camera/depth/points');
-    pause(2);
+    pause(1);
     img = readImage(imsub.LatestMessage);
     % plot the depth data with rgb
     depthxyz = readXYZ(pcsub.LatestMessage);
     depthrgb = readRGB(pcsub.LatestMessage);
+    
+    % Obtain desired shapes and colours
+    chatSub = rossubscriber('/chatter');
+    chat = receive(chatSub);
+    message = chat.LatestMessage;
 end
 %% Create mask 
 % Convert to binary image. Set sensitivity to detect the dark blue objects

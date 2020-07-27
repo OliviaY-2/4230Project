@@ -11,17 +11,28 @@ used and the XYZ coordinates of the centroid of the objects is returned.
 08/07/2020 Add centroids to object.
 13/07/2020 Increased accuracy by only use points on the top surface of the
     object.
+27/07/2020 Add ability to publish centroids to a ros topic
 
 %}
 
 clc;
-clear all;
 close all;
 
-% Obtain file with coordinates
-tic;
+rosConnection = false;
+ipaddress = '192.168.1.118';
 filename = 'BunchOfObjects1.mat';
-cube = load(filename);
+
+%% Obtain images 
+% from .mat file
+if rosConnection == 0
+    cube = load(filename);
+else
+    % Obtain Image from ROS topic
+    robotType = 'Gazebo';
+    rosshutdown;
+    rosinit(ipaddress);
+end
+
 imshow(cube.image);
 % Remove the floor. Assume the point furthest away in the z axis 
 % is the floor
@@ -49,7 +60,6 @@ locations = ptCloud.Location;
 % cluster of points. Each cluster is represented as object1.
 size1 = size(labels(:,1));
 size1 = size1(1);
-%object1 = zeros(size1,3);
 object1 = NaN(size1,3);
 allObjects = zeros(size1,3,numClusters);
 objectSizes = zeros(numClusters,1);
@@ -117,5 +127,11 @@ pcshow(ptCloud.Location,[0 0 1]);
 title('Point Cloud');
 pcshow(centroid,[1 0 0]);
 
-
+% Publish data to ROS topic (TO DO)
+if rosConnection == 1
+    % Select ROS topic and message type
+    msg = rospublisher('/centroids','std_msgs/String');
+    msg.centroids = centroid;
+    send(msg);
+end
 
