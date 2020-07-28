@@ -18,12 +18,9 @@ Edit History:
 28/07/2020 created file
 
 %}
-close all;
-clc;
-
 % Choose if image is obtained from a folder or ROS topic
-rosConnection = false;
-ipaddress = '192.168.1.118';
+rosConnection = true;
+ipaddress = '192.168.56.101';
 myFolder = '.\RGBD_Data';
 loadImages = 'Multiple Objects';
 
@@ -50,19 +47,17 @@ else
     robotType = 'Gazebo';
     rosshutdown;
     rosinit(ipaddress);
-    blockposes = rossubscriber('/gazebo/link_states');
-    pause(2);
     disp("Getting new image..");
     tic
-    posdata = receive(blockposes, 10);
     imsub = rossubscriber('/camera/color/image_raw');
+    pause(1);
     pcsub = rossubscriber('/camera/depth/points');
     pause(1);
     img = readImage(imsub.LatestMessage);
     % plot the depth data with rgb
     depthxyz = readXYZ(pcsub.LatestMessage);
     depthrgb = readRGB(pcsub.LatestMessage);
-    
+    toc
 %     % Obtain desired shapes and colours
 %     chatSub = rossubscriber('/chatter');
 %     chat = receive(chatSub);
