@@ -10,11 +10,13 @@ Object Detection Using YOLO v3 Deep Learning
 https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-deep-learning.html
 
 Instructions:
-    Set names for folders with data for variable 'classes'
+    Set names for folders with data for variable 'classes'.
     Set 'doTraining' variable if you want to train a network or used a
-    pretrained one
+    pretrained one.
     In load data, set value for DataTable to either use custom images or
-    try out with vehicle images given by example
+    try out with vehicle images given by example.
+    Set 'boundingBoxes' variables to load bounding boxes from a .mat file 
+    created using image labeller app.
 
 Edit History:
 13/07/2020 created file
@@ -48,12 +50,12 @@ clc;
 
 doTraining = true;
 if ~doTraining
-    if ~exist('yolov3SqueezeNetVehicleExample_20a.mat','file')
-        disp('Downloading pretrained detector (8.9 MB)...');
-        pretrainedURL = 'https://www.mathworks.com/supportfiles/vision/data/yolov3SqueezeNetVehicleExample_20a.mat';
-        websave('yolov3SqueezeNetVehicleExample_20a.mat', pretrainedURL);
-    end
-    pretrained = load("yolov3SqueezeNetVehicleExample_20a.mat");
+%     if ~exist('yolov3SqueezeNetVehicleExample_20a.mat','file')
+%         disp('Downloading pretrained detector (8.9 MB)...');
+%         pretrainedURL = 'https://www.mathworks.com/supportfiles/vision/data/yolov3SqueezeNetVehicleExample_20a.mat';
+%         websave('yolov3SqueezeNetVehicleExample_20a.mat', pretrainedURL);
+%     end
+    pretrained = load("net_YOLOv3.mat");
     net = pretrained.net;
 end
 %% Example to show data type used by the network
@@ -74,10 +76,10 @@ imdatastore = imageDatastore(fullfile(myFolder,...
     classes), ...
     'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
 % load bounding boxes obtained using image labeling app
-boundingBoxes = load('FullSetBoundingBoxes.mat');
+boundingBoxes = load('FullSetBoundingBoxes_2.mat');
 
 % Create a combined table of all the data
-DataTable = [cell2table(imdatastore.Files) boundingBoxes.gTruth.LabelData];
+DataTable = [boundingBoxes.gTruth.DataSource.Source boundingBoxes.gTruth.LabelData];
 DataTable.Properties.VariableNames{1} = 'imageFilename';
 %DataTable(~cellfun('isempty',DataTable));
 % [imds, bxds] = objectDetectorTrainingData(boundingBoxes.gTruth);
@@ -305,10 +307,10 @@ end
 
 % Evaluate the object detector using Average Precision metric.
 [ap, recall, precision] = evaluateDetectionPrecision(results, preprocessedTestData);
-
+%%
 % Plot precision-recall curve.
 figure
-plot(recall, precision)
+plot(cell2mat(recall), cell2mat(precision))
 xlabel('Recall')
 ylabel('Precision')
 grid on
@@ -322,12 +324,11 @@ title(sprintf('Average Precision = %.2f', ap))
 
 %% Detect Object
 
-reset(preprocessedTestData)
-data = read(preprocessedTestData);
-
 % Get the image.
-I = data{1};
-
+I = load('C:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data\Multiple Objects\3cubes7.mat');
+imgSize = [227 227];
+I = imresize(I.image,imgSize);
+I = im2single(I);
 % Convert to dlarray.
 XTest = dlarray(I,'SSCB');
 
@@ -340,7 +341,7 @@ end
 
 % Display the detections on image.
 if ~isempty(scores)
-    I = insertObjectAnnotation(I, 'rectangle', bboxes, scores);
+    I = insertObjectAnnotation(I, 'rectangle', bboxes, labels);
 end
 figure
 imshow(I)

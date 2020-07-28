@@ -32,7 +32,7 @@ rosConnection = false;
 imgSize = [227 227];
 ipaddress = '192.168.1.118';
 myFolder = '.\RGBD_Data';
-classes = 'PNG Multiple Objects';
+classes = 'Multiple Objects';
 net = load('net.mat','net');
 desiredColour = 'all';
 pause(1);
@@ -42,10 +42,15 @@ if rosConnection == 0
     disp(['Obtain image from ',myFolder]);
     % collect all file paths for .mat data sets
     % Grab all the images in the folder and store in a single folder
+%     imdatastore = imageDatastore(fullfile(myFolder,... 
+%         classes), ...
+%         'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
+%     % Take a single image
+%     img = readimage(imdatastore,2);
+    
     imdatastore = imageDatastore(fullfile(myFolder,... 
-        classes), ...
-        'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
-    % Take a single image
+        classes),...
+        'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead);
     img = readimage(imdatastore,2);
 else
     % Obtain Image from ROS topic
@@ -153,6 +158,12 @@ end
 %     YPred = classify(net.net,resizeImage);
 % end
 %% Functions
+% function to read images from .mat files
+function data = matRead(filename)
+inp = load(filename);
+f = fields(inp);
+data = inp.(f{3});
+end
 
 function [BW,maskedRGBImage] = createREDMask(RGB)
 
