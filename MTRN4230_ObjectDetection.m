@@ -15,8 +15,8 @@ Instructions:
     yolov3 detection function.
     Choose ipaddress to connect to ROS and Gazebo
     Run code. 
-    Type 'Yes' to obtain and classify and image
-    Type 'No' to end program
+    Type 'yes' to obtain and classify and image
+    Type 'no' to end program
 
 Edit History:
 28/07/2020 created file
@@ -25,18 +25,20 @@ Edit History:
 function MTRN4230_ObjectDetection()
     % Set ipaddress for ROS connection
     ipaddress = '192.168.56.101';
-    % myFolder = '.\RGBD_Data';
-    % loadImages = 'Multiple Objects';
     
     % Deep learning neural network variables
     executionEnvironment = "auto";
     DetectVariables = load('YOLOv3_Detect_variables.mat');
     Net = DetectVariables.net;
-    NetworkOutputs = DetectVariables.networkOutputs;
+    NetworkOutputs = ["conv2Detection1"
+    "conv2Detection2"
+    ];
     AnchorBoxes = DetectVariables.anchorBoxes;
-    AnchorBoxMasks = DetectVariables.anchorBoxMasks;
-    ConfidenceThreshold = DetectVariables.confidenceThreshold;
-    OverlapThreshold = DetectVariables.overlapThreshold;
+    AnchorBoxMasks = {[1,2,3]
+        [4,5,6]
+        };
+    ConfidenceThreshold = 0.75;
+    OverlapThreshold = 0.5;
     ClassNames = DetectVariables.classNames;
     imgSize = [227 227];
 
@@ -47,7 +49,8 @@ function MTRN4230_ObjectDetection()
 
     % Obtain an image to classify
     disp('Obtain images for classification');
-
+    % myFolder = '.\RGBD_Data';
+    % loadImages = 'Mix';
     %     disp(['Obtain image from ',myFolder]);
     %     imdatastore = imageDatastore(fullfile(myFolder,... 
     %         loadImages),...
@@ -63,12 +66,12 @@ function MTRN4230_ObjectDetection()
         % Wait for input from command line
         userInput = input("Process a new image: ", 's');
         switch userInput
-            case 'No'
+            case 'no'
                 % Exit loop
                 flag = 0;
-            case 'Yes'
+            case 'yes'
                 % Obtain image from Gazebo using ROS topics
-                [img, ptCloud] = obtainImage();
+                [img, ptCloud, camPose] = obtainImage();
                 %Object classification
                 disp('Classify objects in image');
                 % Resize to input into network.
@@ -87,12 +90,11 @@ function MTRN4230_ObjectDetection()
     end
 end
 
-function [image, depthxyz] = obtainImage()
+function [image, depthxyz, posdata] = obtainImage()
     disp("Getting new image..");
     tic
-%     blockposes = rossubscriber('/gazebo/link_states');
-%     posdata = receive(blockposes);
-    
+    blockposes = rossubscriber('/gazebo/link_states');
+    posdata = receive(blockposes);
     imsub = rossubscriber('/camera/color/image_raw');
     image_data = receive(imsub);
     image = readImage(image_data);
