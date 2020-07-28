@@ -78,7 +78,9 @@ function MTRN4230_ObjectDetection()
                 [Bboxes, Scores, Labels] = classifyImage(I,executionEnvironment, ...
                     Net, NetworkOutputs,AnchorBoxes,AnchorBoxMasks, ConfidenceThreshold, ...
                     OverlapThreshold, ClassNames);
+                disp(Bboxes);
                 Centroids = calculateCentroids(ptCloud);
+                disp(Centroids);
             otherwise
                 disp("Invalid"); 
         end
@@ -88,13 +90,15 @@ end
 function [image, depthxyz] = obtainImage()
     disp("Getting new image..");
     tic
+%     blockposes = rossubscriber('/gazebo/link_states');
+%     posdata = receive(blockposes);
+    
     imsub = rossubscriber('/camera/color/image_raw');
-    %pause(0.5);
+    image_data = receive(imsub);
+    image = readImage(image_data);
     pcsub = rossubscriber('/camera/depth/points');
-    pause(1.5);
-    image = readImage(imsub.LatestMessage);
-    % plot the depth data with rgb
-    depthxyz = readXYZ(pcsub.LatestMessage);
+    depthxyz_data = receive(pcsub);
+    depthxyz = readXYZ(depthxyz_data);
     toc
     %     % Obtain desired shapes and colours
     %     chatSub = rossubscriber('/chatter');
