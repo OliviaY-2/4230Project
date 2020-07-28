@@ -78,6 +78,7 @@ function MTRN4230_ObjectDetection()
                 [Bboxes, Scores, Labels] = classifyImage(I,executionEnvironment, ...
                     Net, NetworkOutputs,AnchorBoxes,AnchorBoxMasks, ConfidenceThreshold, ...
                     OverlapThreshold, ClassNames);
+                Centroids = calculateCentroids(ptCloud);
             otherwise
                 disp("Invalid"); 
         end
@@ -124,31 +125,85 @@ function [bboxes, scores, labels] = classifyImage(I,execution_Environment, ...
     imshow(I)
 end
 
-% function data = matRead(filename)
-%     inp = load(filename);
-%     f = fields(inp);
-%     data = inp.(f{3});
-% end
+function centroid = calculateCentroids(pt)
+    % Remove the floor. Assume the point furthest away in the z axis 
+    % is the floor
+    floor = max(pt(:,3)) - 0.05;
+    pt(pt(:,3) >= floor,:) = [];
 
-% function data = preprocessData(data, targetSize)
-% % Resize the images and scale the pixels to between 0 and 1. Also scale the
-% % corresponding bounding boxes.
-% 
-% for ii = 1:size(data,1)
-%     I = data{ii,1};
-%     imgSize = size(I);
-%     
-%     % Convert an input image with single channel to 3 channels.
-%     if numel(imgSize) == 1 
-%         I = repmat(I,1,1,3);
-%     end
-%     bboxes = data{ii,2};
-%     I = im2single(imresize(I,targetSize(1:2)));
-%     scale = targetSize(1:2)./imgSize(1:2);
-%     bboxes = bboxresize(bboxes,scale);
-%     data(ii,1:2) = {I, bboxes};
-% end
-% end
+    % Convert to type pointcloud
+    ptCloudHiRes = pointCloud(pt);
+    % Reduce the number of samples to aid computation time
+    PTCloud = pcdownsample(ptCloudHiRes, 'gridAverage', 0.005);
+    
+    % label the groups of points that form a cluster
+    minDistance = 0.01;
+    [labels,numClusters] = pcsegdist(PTCloud,minDistance);
+    locations = PTCloud.Location;
+    
+    % find out how many points were labelled and create an array
+    % where each 'layer' in allObjects is the coordinates for a 
+    % cluster of points. Each cluster is represented as object1.
+    numLabels = size(labels(:,1),1);
+    %size1 = size1(1);
+    object1 = NaN(numLabels,3);
+    % allObjects = zeros(numLabels,3,numClusters);
+    % objectSizes = zeros(numClusters,1);
+    centroid = zeros(numLabels,3);
+    validObjects = 1;
+    toc;
+    % loop through all the clusters found
+    for clustCnt = 1:1:numClusters
+        tic
+        % loop through all the labels and store points with the same label
+        % in object1
+        cnt2 = 1;
+        for cnt = 1:1:size(labels)
+            if labels(cnt) == clustCnt
+                object1(cnt2,:) = locations(cnt,:);
+                cnt2 = cnt2 + 1;
+            end
+        end
+        % copy the cluster of points for objects big enough
+        % into allObjects and reset object1
+        % Also count how many objects were found using validObjects
+        if cnt2 > 200
+            % store how many points are in the cluster
+            % objectSizes(validObjects) = cnt2;
+            % find the z coordinate for the top most face
+            topFace = min(object1(:,3));
+            % set points that correspond to the side of the objects to 0
+            object1(object1(:,3) > (topFace + 0.005),:) = 0;
+            % store clusters
+            % allObjects(:,:,validObjects) = object1;
+            % remove NaN and 0 values
+            object1(isnan(object1(:,1)),:) = [];
+            object1(object1(:,1) == 0,:) = [];
+
+            % calculate centroids
+            centroid(validObjects,1) = mean(object1(:,1));
+            centroid(validObjects,2) = mean(object1(:,2)); 
+            centroid(validObjects,3) = mean(object1(:,3)); 
+            validObjects = validObjects + 1;
+        end
+        % reset object1
+        object1 = NaN(numLabels,3);
+        toc
+    end
+    % Correct value for validObjects
+    % validObjects = validObjects - 1;
+    % Remove the zero values from when the arrays were initialised.  
+    % objectSizes(objectSizes == 0) = [];
+    centroid(centroid(:,1) == 0,:) = [];
+    %allObjects = allObjects(:,:,1:validObjects);
+    
+    % Show the centroids on the original point cloud
+    figure();
+    hold on;
+    pcshow(locations,[0 0 1]);
+    title('Point Cloud');
+    pcshow(centroid,[1 0 0]);
+end
 
 function [bboxes,scores,labels] = yolov3Detect(net, XTest, networkOutputs, anchors, anchorBoxMask, confidenceThreshold, overlapThreshold, classes)
 % The yolov3Detect function detects the bounding boxes, scores, and labels in an image.
@@ -250,7 +305,31 @@ for i=1:size(YPredCell,1)
 end
 end
 
+% function data = matRead(filename)
+%     inp = load(filename);
+%     f = fields(inp);
+%     data = inp.(f{3});
+% end
 
+% function data = preprocessData(data, targetSize)
+% % Resize the images and scale the pixels to between 0 and 1. Also scale the
+% % corresponding bounding boxes.
+% 
+% for ii = 1:size(data,1)
+%     I = data{ii,1};
+%     imgSize = size(I);
+%     
+%     % Convert an input image with single channel to 3 channels.
+%     if numel(imgSize) == 1 
+%         I = repmat(I,1,1,3);
+%     end
+%     bboxes = data{ii,2};
+%     I = im2single(imresize(I,targetSize(1:2)));
+%     scale = targetSize(1:2)./imgSize(1:2);
+%     bboxes = bboxresize(bboxes,scale);
+%     data(ii,1:2) = {I, bboxes};
+% end
+% end
 
 
 
