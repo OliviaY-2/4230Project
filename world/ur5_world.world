@@ -25,9 +25,9 @@
 					<uri>model://green_cube</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -42,9 +42,9 @@
 					<uri>model://blue_cube</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -59,9 +59,9 @@
 					<uri>model://red_cube</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -76,9 +76,9 @@
 					<uri>model://green_longboi</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -93,9 +93,9 @@
 					<uri>model://blue_longboi</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -110,9 +110,9 @@
 					<uri>model://red_longboi</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -127,9 +127,9 @@
 					<uri>model://green_sphere</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -144,9 +144,9 @@
 					<uri>model://blue_sphere</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -161,9 +161,9 @@
 					<uri>model://red_sphere</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -178,9 +178,9 @@
 					<uri>model://green_cylinder</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -195,9 +195,9 @@
 					<uri>model://blue_cylinder</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -212,9 +212,9 @@
 					<uri>model://red_cylinder</uri>
 				</include>
 			</model>
-			<pose>0 -1.6 0.25 0 0 0</pose>
+			<pose>0 -1.25 0.25 0 0 0</pose>
 			<box>
-				<size>2 1 0.01</size>
+				<size>1.75 0.75 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
