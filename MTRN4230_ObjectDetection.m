@@ -13,119 +13,142 @@ https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-dee
 Instructions:
     Load variables from YOLOv3_Detect_variables.mat. These are used for
     yolov3 detection function.
+    Choose ipaddress to connect to ROS and Gazebo
+    Run code. 
+    Type 'Yes' to obtain and classify and image
+    Type 'No' to end program
 
 Edit History:
 28/07/2020 created file
 
 %}
-% Choose if image is obtained from a folder or ROS topic
-rosConnection = true;
-ipaddress = '192.168.56.101';
-myFolder = '.\RGBD_Data';
-loadImages = 'Multiple Objects';
+function MTRN4230_ObjectDetection()
+    % Set ipaddress for ROS connection
+    ipaddress = '192.168.56.101';
+    % myFolder = '.\RGBD_Data';
+    % loadImages = 'Multiple Objects';
+    
+    % Deep learning neural network variables
+    executionEnvironment = "auto";
+    DetectVariables = load('YOLOv3_Detect_variables.mat');
+    Net = DetectVariables.net;
+    NetworkOutputs = DetectVariables.networkOutputs;
+    AnchorBoxes = DetectVariables.anchorBoxes;
+    AnchorBoxMasks = DetectVariables.anchorBoxMasks;
+    ConfidenceThreshold = DetectVariables.confidenceThreshold;
+    OverlapThreshold = DetectVariables.overlapThreshold;
+    ClassNames = DetectVariables.classNames;
+    imgSize = [227 227];
 
-% Deep learning neural network variables
-executionEnvironment = "auto";
-Detect_Variables = load('YOLOv3_Detect_variables.mat');
-imgSize = [227 227];
+    % % Colour options: 'all_c', 'red', 'green', 'blue'.
+    % desiredColour = 'all_c';
+    % % Shape options: 'all_s', 'Cube', 'Cylinder', 'Rectangle'.
+    % desireShapes = 'all_s';
 
-% Colour options: 'all_c', 'red', 'green', 'blue'.
-desiredColour = 'all_c';
-% Shape options: 'all_s', 'Cube', 'Cylinder', 'Rectangle'.
-desireShapes = 'all_s';
+    % Obtain an image to classify
+    disp('Obtain images for classification');
 
-%% Obtain an image to classify
-disp('Obtain images for classification');
-if rosConnection == 0
-    disp(['Obtain image from ',myFolder]);
-    imdatastore = imageDatastore(fullfile(myFolder,... 
-        loadImages),...
-        'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead);
-    img = readimage(imdatastore,1);
-else
-    % Obtain Image from ROS topic
-    robotType = 'Gazebo';
+    %     disp(['Obtain image from ',myFolder]);
+    %     imdatastore = imageDatastore(fullfile(myFolder,... 
+    %         loadImages),...
+    %         'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead);
+    %     img = readimage(imdatastore,1);
+
+    % Initialise ROS
     rosshutdown;
     rosinit(ipaddress);
+    % Create loop to continue asking for user inputs.
+    flag = 1;
+    while flag == 1
+        % Wait for input from command line
+        userInput = input("Process a new image: ", 's');
+        switch userInput
+            case 'No'
+                % Exit loop
+                flag = 0;
+            case 'Yes'
+                % Obtain image from Gazebo using ROS topics
+                [img, ptCloud] = obtainImage();
+                %Object classification
+                disp('Classify objects in image');
+                % Resize to input into network.
+                I_resize = imresize(img,imgSize);
+                I = im2single(I_resize);
+                % Classify objects in image
+                [Bboxes, Scores, Labels] = classifyImage(I,executionEnvironment, ...
+                    Net, NetworkOutputs,AnchorBoxes,AnchorBoxMasks, ConfidenceThreshold, ...
+                    OverlapThreshold, ClassNames);
+            otherwise
+                disp("Invalid"); 
+        end
+    end
+end
+
+function [image, depthxyz] = obtainImage()
     disp("Getting new image..");
     tic
     imsub = rossubscriber('/camera/color/image_raw');
-    pause(1);
+    %pause(0.5);
     pcsub = rossubscriber('/camera/depth/points');
-    pause(1);
-    img = readImage(imsub.LatestMessage);
+    pause(1.5);
+    image = readImage(imsub.LatestMessage);
     % plot the depth data with rgb
     depthxyz = readXYZ(pcsub.LatestMessage);
-    depthrgb = readRGB(pcsub.LatestMessage);
     toc
-%     % Obtain desired shapes and colours
-%     chatSub = rossubscriber('/chatter');
-%     chat = receive(chatSub);
-%     message = chat.LatestMessage;
+    %     % Obtain desired shapes and colours
+    %     chatSub = rossubscriber('/chatter');
+    %     chat = receive(chatSub);
+    %     message = chat.LatestMessage;
+
 end
 
-%% Object classification
-disp('Classify objects in image');
-
-% Get the image and resize to input into network.
-I = imresize(img,imgSize);
-I = im2single(I);
-% Convert to dlarray.
-XTest = dlarray(I,'SSCB');
-
-% If GPU is available, then convert data to gpuArray.
-if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu"
-    XTest = gpuArray(XTest);
-end
-
-net = Detect_Variables.net;
-networkOutputs = Detect_Variables.networkOutputs;
-anchorBoxes = Detect_Variables.anchorBoxes;
-anchorBoxMasks = Detect_Variables.anchorBoxMasks;
-confidenceThreshold = Detect_Variables.confidenceThreshold;
-overlapThreshold = Detect_Variables.overlapThreshold;
-classNames = Detect_Variables.classNames;
-
-[bboxes, scores, labels] = yolov3Detect(net, XTest, networkOutputs, ...
-    anchorBoxes, anchorBoxMasks, confidenceThreshold, overlapThreshold, classNames);
-
-% Display the detections on image.
-if ~isempty(scores)
-    I = insertObjectAnnotation(I, 'rectangle', bboxes, labels);
-end
-figure
-imshow(I)
-
-
-
-
-
-%% Functions
-function data = matRead(filename)
-    inp = load(filename);
-    f = fields(inp);
-    data = inp.(f{3});
-end
-
-function data = preprocessData(data, targetSize)
-% Resize the images and scale the pixels to between 0 and 1. Also scale the
-% corresponding bounding boxes.
-
-for ii = 1:size(data,1)
-    I = data{ii,1};
-    imgSize = size(I);
-    
-    % Convert an input image with single channel to 3 channels.
-    if numel(imgSize) == 1 
-        I = repmat(I,1,1,3);
+function [bboxes, scores, labels] = classifyImage(I,execution_Environment, ...
+    net, networkOutputs,anchorBoxes,anchorBoxMasks, confidenceThreshold, ...
+    overlapThreshold, classNames)
+    % Convert to dlarray.
+    XTest = dlarray(I,'SSCB');
+    % If GPU is available, then convert data to gpuArray.
+    if (execution_Environment == "auto" && canUseGPU) || execution_Environment == "gpu"
+        XTest = gpuArray(XTest);
     end
-    bboxes = data{ii,2};
-    I = im2single(imresize(I,targetSize(1:2)));
-    scale = targetSize(1:2)./imgSize(1:2);
-    bboxes = bboxresize(bboxes,scale);
-    data(ii,1:2) = {I, bboxes};
+    
+    tic
+    [bboxes, scores, labels] = yolov3Detect(net,XTest, networkOutputs,anchorBoxes,anchorBoxMasks, confidenceThreshold, ...
+        overlapThreshold, classNames);
+    toc
+    % Display the detections on image.
+    if ~isempty(scores)
+        I = insertObjectAnnotation(I, 'rectangle', bboxes, labels);
+    end
+    figure
+    imshow(I)
 end
-end
+
+% function data = matRead(filename)
+%     inp = load(filename);
+%     f = fields(inp);
+%     data = inp.(f{3});
+% end
+
+% function data = preprocessData(data, targetSize)
+% % Resize the images and scale the pixels to between 0 and 1. Also scale the
+% % corresponding bounding boxes.
+% 
+% for ii = 1:size(data,1)
+%     I = data{ii,1};
+%     imgSize = size(I);
+%     
+%     % Convert an input image with single channel to 3 channels.
+%     if numel(imgSize) == 1 
+%         I = repmat(I,1,1,3);
+%     end
+%     bboxes = data{ii,2};
+%     I = im2single(imresize(I,targetSize(1:2)));
+%     scale = targetSize(1:2)./imgSize(1:2);
+%     bboxes = bboxresize(bboxes,scale);
+%     data(ii,1:2) = {I, bboxes};
+% end
+% end
 
 function [bboxes,scores,labels] = yolov3Detect(net, XTest, networkOutputs, anchors, anchorBoxMask, confidenceThreshold, overlapThreshold, classes)
 % The yolov3Detect function detects the bounding boxes, scores, and labels in an image.
