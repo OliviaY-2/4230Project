@@ -221,5 +221,57 @@
 				<type>random</type>
 			</distribution>
 		</population>
+
+    <population name ="green_triangle_pop">
+			<model name="green_triangle_model">
+				<include>
+					<static>true</static>
+					<uri>model://green_triangle</uri>
+				</include>
+			</model>
+			<pose>0 -1.25 0.25 0 0 0</pose>
+			<box>
+				<size>1.75 0.75 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="blue_triangle_pop">
+			<model name="blue_triangle_model">
+				<include>
+					<static>true</static>
+					<uri>model://blue_triangle</uri>
+				</include>
+			</model>
+			<pose>0 -1.25 0.25 0 0 0</pose>
+			<box>
+				<size>1.75 0.75 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="red_triangle_pop">
+			<model name="red_triangle_model">
+				<include>
+					<static>true</static>
+					<uri>model://red_triangle</uri>
+				</include>
+			</model>
+			<pose>0 -1.25 0.25 0 0 0</pose>
+			<box>
+				<size>1.75 0.75 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
 	</world>
 </sdf>
