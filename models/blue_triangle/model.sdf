@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="blue_triangle">
+    <static>true</static>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+						<uri>model://blue_triangle/meshes/triangular_prism.dae</uri>
+						<scale>0.05 0.05 0.056</scale>
+					</mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+						<uri>model://blue_triangle/meshes/triangular_prism.dae</uri>
+						<scale>0.05 0.05 0.056</scale>
+					</mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+	    <name>Gazebo/Blue</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
