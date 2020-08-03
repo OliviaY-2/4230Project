@@ -14,14 +14,21 @@ Instructions:
     Load variables from YOLOv3_Detect_variables.mat. These are used for
     yolov3 deep neural network detection function. This folder can be
     obtained by saving variables 'net','anchorBoxes' and 'classNames' after
-    training a network using YOLOv3
+    training a network using YOLOv3.m
+
     Choose ipaddress to connect to ROS and Gazebo
+    Current set up uses .mat file holding data saved in RGBG_Data folder.
+    To go back to ROS, uncomment code initialising ROS and Obtaining image
+    from ROS.
+
     Run code. 
     Type 'yes' to obtain and classify and image
     Type 'no' to end program
 
 Edit History:
 28/07/2020 created file
+29/07/2020 added point cloud stuff
+08/03/2020 load data from .mat file. 
 
 %}
 function MTRN4230_ObjectDetection()
@@ -60,7 +67,7 @@ function MTRN4230_ObjectDetection()
     filename = imdatastore.Files(20);
     loadMat = load(filename{1});
     img = loadMat.image;
-    [BW,maskedRGBImage] = createMask(img);
+    
     
     ptCloud = loadMat.xyz;
 
@@ -79,8 +86,11 @@ function MTRN4230_ObjectDetection()
             case 'yes'
                 % Obtain image from Gazebo using ROS topics
                 % [img, ptCloud, camPose] = obtainImage();
-                %Object classification
+                % Object classification
                 disp('Classify objects in image');
+                % HSV mask image to remove grey floor, grey parts of arm
+                % and purple box
+                [BW,maskedRGBImage] = createMask(img);
                 % Resize to input into network.
                 I_resize = imresize(maskedRGBImage,imgSize);
                 I = im2single(I_resize);
