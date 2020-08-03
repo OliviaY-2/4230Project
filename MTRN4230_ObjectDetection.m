@@ -12,7 +12,9 @@ https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-dee
 
 Instructions:
     Load variables from YOLOv3_Detect_variables.mat. These are used for
-    yolov3 detection function.
+    yolov3 deep neural network detection function. This folder can be
+    obtained by saving variables 'net','anchorBoxes' and 'classNames' after
+    training a network using YOLOv3
     Choose ipaddress to connect to ROS and Gazebo
     Run code. 
     Type 'yes' to obtain and classify and image
@@ -37,7 +39,7 @@ function MTRN4230_ObjectDetection()
     AnchorBoxMasks = {[1,2,3]
         [4,5,6]
         };
-    ConfidenceThreshold = 0.75;
+    ConfidenceThreshold = 0.5;
     OverlapThreshold = 0.5;
     ClassNames = DetectVariables.classNames;
     imgSize = [227 227];
@@ -49,43 +51,47 @@ function MTRN4230_ObjectDetection()
 
     % Obtain an image to classify
     disp('Obtain images for classification');
-    % myFolder = '.\RGBD_Data';
-    % loadImages = 'Mix';
-    %     disp(['Obtain image from ',myFolder]);
-    %     imdatastore = imageDatastore(fullfile(myFolder,... 
-    %         loadImages),...
-    %         'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead);
-    %     img = readimage(imdatastore,1);
+    myFolder = '.\RGBD_Data';
+    loadImages = 'Mix';
+    disp(['Obtain image from ',myFolder]);
+    imdatastore = imageDatastore(fullfile(myFolder,... 
+        loadImages),...
+        'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead);
+    filename = imdatastore.Files(20);
+    loadMat = load(filename{1});
+    img = loadMat.image;
+    [BW,maskedRGBImage] = createMask(img);
+    
+    ptCloud = loadMat.xyz;
 
     % Initialise ROS
-    rosshutdown;
-    rosinit(ipaddress);
+    % rosshutdown;
+    % rosinit(ipaddress);
     % Create loop to continue asking for user inputs.
     flag = 1;
     while flag == 1
         % Wait for input from command line
-        userInput = input("Process a new image: ", 's');
+        userInput = input("Do you want to process a new image?: ", 's');
         switch userInput
             case 'no'
                 % Exit loop
                 flag = 0;
             case 'yes'
                 % Obtain image from Gazebo using ROS topics
-                [img, ptCloud, camPose] = obtainImage();
+                % [img, ptCloud, camPose] = obtainImage();
                 %Object classification
                 disp('Classify objects in image');
                 % Resize to input into network.
-                I_resize = imresize(img,imgSize);
+                I_resize = imresize(maskedRGBImage,imgSize);
                 I = im2single(I_resize);
                 % Classify objects in image
                 [Bboxes, Scores, Labels] = classifyImage(I,executionEnvironment, ...
                     Net, NetworkOutputs,AnchorBoxes,AnchorBoxMasks, ConfidenceThreshold, ...
                     OverlapThreshold, ClassNames);
-                disp(Bboxes);
                 Centroids = calculateCentroids(ptCloud);
-                disp(Centroids);
+                disp(Labels);
             otherwise
-                disp("Invalid"); 
+                disp("Invalid. Options include 'yes' or 'no'."); 
         end
     end
 end
@@ -311,11 +317,43 @@ for i=1:size(YPredCell,1)
 end
 end
 
-% function data = matRead(filename)
-%     inp = load(filename);
-%     f = fields(inp);
-%     data = inp.(f{3});
-% end
+function data = matRead(filename)
+    inp = load(filename);
+    f = fields(inp);
+    data = inp.(f{3});
+end
+
+% mask out everything except the objects
+function [BW,maskedRGBImage] = createMask(RGB)
+
+% Convert RGB image to chosen color space
+I = rgb2hsv(RGB);
+
+% Define thresholds for channel 1 based on histogram settings
+channel1Min = 0.955;
+channel1Max = 0.749;
+
+% Define thresholds for channel 2 based on histogram settings
+channel2Min = 0.201;
+channel2Max = 1.000;
+
+% Define thresholds for channel 3 based on histogram settings
+channel3Min = 0.000;
+channel3Max = 1.000;
+
+% Create mask based on chosen histogram thresholds
+sliderBW = ( (I(:,:,1) >= channel1Min) | (I(:,:,1) <= channel1Max) ) & ...
+    (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+    (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+BW = sliderBW;
+
+% Initialize output masked image based on input image.
+maskedRGBImage = RGB;
+
+% Set background pixels where BW is false to zero.
+maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+
+end
 
 % function data = preprocessData(data, targetSize)
 % % Resize the images and scale the pixels to between 0 and 1. Also scale the
