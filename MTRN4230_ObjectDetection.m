@@ -32,7 +32,8 @@ Edit History:
 08/03/2020 load data from .mat file. 
 03/08/2020 ROI point cloud segmentation
 04/08/2020 Clean up ROI point cloud segmentation, calculate centroids, if
-    statement to check if any objects were detected
+    statement to check if any objects were detected, choose colour and
+    shape
 
 %}
 function MTRN4230_ObjectDetection()
@@ -59,12 +60,12 @@ function MTRN4230_ObjectDetection()
     % Classification threshold values. Change to increase possible range of
     % objects to classify if scores are low. 
     ConfidenceThreshold = 0.6;
-    OverlapThreshold = 0.3;
+    OverlapThreshold = 0.5;
 
-    % % Colour options: 'all_c', 'red', 'green', 'blue'.
-    % desiredColour = 'all_c';
-    % % Shape options: 'all_s', 'Cube', 'Cylinder', 'Rectangle'.
-    % desireShapes = 'all_s';
+    % Colour options: 'all_c', 'red', 'green', 'blue'.
+    possibleColours = ['Red', 'Green', 'Blue'];
+    % Shape options: 'all_s', 'Cube', 'Cylinder', 'Rectangle'.
+    possibleShapes = ['Cube', 'Cylinder'];
 
     disp('Obtain images for classification');
     
@@ -102,6 +103,29 @@ function MTRN4230_ObjectDetection()
                 if ROS_Used == 1
                     [img, ptCloud, ~] = obtainImage();
                 end
+                % Choose which colour is desired
+                colourInput = input("Desired Colour: ", 's');
+                switch colourInput
+                    case {'Red', 'Green', 'Blue'}
+                        desiredColour = colourInput;
+                    case 'All'
+                        desiredColour = possibleColours;
+                    otherwise
+                        disp('Invalid colour');
+                        continue;
+                end
+                % Choose which shape is desired
+                shapeInput = input("Desired Shape: ", 's');
+                switch shapeInput
+                    case {'Cube', 'Cylinder'}
+                        desiredShapes = shapeInput;
+                    case 'All'
+                        desiredShapes = possibleShapes;
+                    otherwise
+                        disp('Invalid shape');
+                        continue;
+                end
+                              
                 % Object classification
                 disp('Classify objects in image');
                 % HSV mask image to remove grey floor, grey parts of arm
@@ -114,8 +138,18 @@ function MTRN4230_ObjectDetection()
                 [Bboxes, ~, Labels] = classifyImage(I,executionEnvironment, ...
                     Net, NetworkOutputs,AnchorBoxes,AnchorBoxMasks, ConfidenceThreshold, ...
                     OverlapThreshold, ClassNames);
-                % If objects were classified, find centroid in point cloud
-                if ~isempty(Labels)
+                % determine if desired object was detected
+                desiredObjects = strcat(desiredColour,'_', desiredShapes);
+                %desiredObjects = ["Red_Cube";"Green_Cube"];
+%                 for LabelCnt = 1:length(Labels)
+%                     split(Labels(LabelCnt,1),"_");
+%                 end
+                if ~strcmp(desiredObjects,'All_All')
+                    desiredLabels = (Labels(:,1) == desiredObjects);
+                    Bboxes(~desiredLabels,:) = [];
+                end
+                % If desired objects were classified, find centroid in point cloud
+                if ~isempty(Bboxes)
                     Centroids = calculateCentroids(ptCloud,Bboxes);
                 end
             otherwise
