@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+
+
+import rospy
+from std_msgs.msg import String
+import time
+
+GUIList = []
+ArmHome = True
+
+#def callback(data):
+#    rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
+
+
+MatlabPub = rospy.Publisher('MATLAB', String, queue_size=10)         #intialise rostopic called MATLAB
+
+#store all the messages coming from the GUI
+def storeGUI(data):
+    GUIList.append(data.data)
+    #time.sleep(1)
+    #print("message received")
+    print(GUIList)
+    return
+
+
+
+
+
+
+if __name__ == '__main__':
+#while not rospy.is_shutdown():
+
+    rospy.init_node('listener', anonymous=True)                          #make the subscriber for the GUI commands
+    rospy.Subscriber('GUI', String, storeGUI)
+    
+    while not rospy.is_shutdown():
+
+        if ArmHome == True:     #If the arm is in the home position
+            #ArmHome = False
+        
+
+            if GUIList:         #If the GUIList has items to look for
+                DesiredItems = GUIList[0]             #Look for the first items
+
+                #MatlabPub = rospy.Publisher('MATLAB', String, queue_size=10)  #intialise rostopic called MATLAB
+                #rospy.init_node('talker', anonymous=True)                     #be a publisher
+
+                #if not rospy.is_shutdown():                                   #Publish the string representing desired items
+                rospy.loginfo(DesiredItems)
+                MatlabPub.publish(DesiredItems)
+
+                del GUIList[0]                                                #Delete the item off the wanted list
+                print("item deleted")
+
+   
+
+
+        #rospy.spin()
+        rospy.sleep(0.5)
+
+
+
