@@ -141,9 +141,10 @@ function MTRN4230_ObjectDetection()
                 % determine if desired object was detected
                 desiredObjects = strcat(desiredColour,'_', desiredShapes);
                 %desiredObjects = ["Red_Cube";"Green_Cube"];
-%                 for LabelCnt = 1:length(Labels)
-%                     split(Labels(LabelCnt,1),"_");
-%                 end
+                for LabelCnt = 1:length(Labels)
+                    Label_parts = split(Labels(LabelCnt,1),"_");
+                    
+                end
                 if ~strcmp(desiredObjects,'All_All')
                     desiredLabels = (Labels(:,1) == desiredObjects);
                     Bboxes(~desiredLabels,:) = [];
