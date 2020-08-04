@@ -27,9 +27,9 @@ Edit History:
 03/08/2020 ROI point cloud segmentation
 04/08/2020 Clean up ROI point cloud segmentation, calculate centroids, if
     statement to check if any objects were detected, choose colour and
-    shape (no option for all shapes or all colours yet), GUI
+    shape, GUI
 %}
-function MTRN4230_ObjectDetection()
+function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
     ipaddress = '192.168.56.101';
     % Choose if Ros connection is used to obtain data
@@ -54,11 +54,6 @@ function MTRN4230_ObjectDetection()
     % objects to classify if scores are low. 
     ConfidenceThreshold = 0.6;
     OverlapThreshold = 0.5;
-
-    % Colour options: 'all_c', 'red', 'green', 'blue'.
-    possibleColours = ['Red', 'Green', 'Blue'];
-    % Shape options: 'all_s', 'Cube', 'Cylinder', 'Rectangle'.
-    possibleShapes = ['Cube', 'Cylinder'];
 
     disp('Obtain images for classification');
     
@@ -97,6 +92,7 @@ function MTRN4230_ObjectDetection()
                 flag = 0;
             case 'Cancel'
                 % Exit loop
+                close all;
                 flag = 0;
             case 'Yes'
                 % Obtain image from Gazebo using ROS topics
@@ -104,31 +100,33 @@ function MTRN4230_ObjectDetection()
                     [img, ptCloud, ~] = obtainImage();
                 end
                 %number of picks selected
-                
-                 answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
-                 no_of_picks = answer(1,1);
+                answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
+                no_of_picks = str2double(answer{1});
+                if no_of_picks < 10
+                    disp('Too Few Picks');
+                    continue
+                elseif isnan(no_of_picks)
+                    disp('Invalid Input');
+                    continue
+                end
                  
                 % Choose which colour is desired
                 answer = inputdlg('Enter colour: Red, Green, Blue, All','Colour Input',[1 35],{''});
                 colourInput = char(answer(1,1));
                 switch colourInput
-                    case {'Red', 'Green', 'Blue'}
+                    case {'Red', 'Green', 'Blue', 'All'}
                         desiredColour = colourInput;
-                    case 'All'
-                        desiredColour = possibleColours;
                     otherwise
                         disp('Invalid colour');
                         continue;
                 end
                 
                 % Choose which shape is desired
-                answer = inputdlg('Enter shape: Cube, Cylinder, Triangular Prism, All','Shape Input',[1 35],{''});
+                answer = inputdlg('Enter shape: Cube, Cylinder, Tri, All','Shape Input',[1 35],{''});
                 shapeInput = char(answer(1,1));
                 switch shapeInput
-                    case {'Cube', 'Cylinder'}
-                        desiredShapes = shapeInput;
-                    case {'All'}
-                        desiredShapes = possibleShapes;
+                    case {'Cube', 'Cylinder', 'Tri', 'All'}
+                        desiredShapes = strcat('_',shapeInput);
                     otherwise
                         disp('Invalid shape');
                         continue;
@@ -136,9 +134,19 @@ function MTRN4230_ObjectDetection()
                               
                 % Object classification
                 disp('Classify objects in image');
-                % HSV mask image to remove grey floor, grey parts of arm
+                % HSV mask image to remove unwanted colours, grey floor, grey parts of arm
                 % and purple box
-                [~,maskedRGBImage] = createMask(img);
+                switch desiredColour
+                    case 'Red'
+                        [~,maskedRGBImage] = RedMask(img);                        
+                    case 'Green'
+                        [~,maskedRGBImage] = GreenMask(img);                        
+                    case 'Blue'
+                        [~,maskedRGBImage] = BlueMask(img);                        
+                    case 'All'
+                        [~,maskedRGBImage] = createMask(img);
+                end
+                
                 % Resize and modify image to input into network.
                 I_resize = imresize(maskedRGBImage,imgSize);
                 I = im2single(I_resize);
@@ -146,14 +154,22 @@ function MTRN4230_ObjectDetection()
                 [Bboxes, ~, Labels] = classifyImage(I,executionEnvironment, ...
                     Net, NetworkOutputs,AnchorBoxes,AnchorBoxMasks, ConfidenceThreshold, ...
                     OverlapThreshold, ClassNames);
-                % determine if desired object was detected
-                desiredObjects = strcat(desiredColour,'_', desiredShapes);
-                %desiredObjects = ["Red_Cube";"Green_Cube"];
-%                 for LabelCnt = 1:length(Labels)
-%                     split(Labels(LabelCnt,1),"_");
-%                 end
-                if ~strcmp(desiredObjects,'All_All')
-                    desiredLabels = (Labels(:,1) == desiredObjects);
+                % Remove bounding box values if specified
+                if ~strcmp(desiredShapes,'_All')
+                    % determine if desired object shape was detected by
+                    % checking each label
+                    desiredLabels = zeros(length(Labels),1);
+                    for LabelCnt = 1:length(Labels)
+                        % obtain label string
+                        OneLabel = char(Labels(LabelCnt,1));
+                        % If label contains name of shape, find all labels with
+                        % that name and add logical value to desiredLabels
+                        if contains(OneLabel, desiredShapes)
+                            desiredLabels = desiredLabels |(Labels(:,1) == OneLabel);
+                        end
+                    end
+                    % Remove all bounding boxes that were not in desired shape
+                    % list
                     Bboxes(~desiredLabels,:) = [];
                 end
                 % If desired objects were classified, find centroid in point cloud
@@ -409,3 +425,99 @@ maskedRGBImage = RGB;
 maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
 
 end
+
+% Mask out all shapes except the red ones
+function [BW,maskedRGBImage] = RedMask(RGB)
+
+% Convert RGB image to chosen color space
+I = rgb2hsv(RGB);
+
+% Define thresholds for channel 1 based on histogram settings
+channel1Min = 0.846;
+channel1Max = 0.000;
+
+% Define thresholds for channel 2 based on histogram settings
+channel2Min = 0.159;
+channel2Max = 1.000;
+
+% Define thresholds for channel 3 based on histogram settings
+channel3Min = 0.000;
+channel3Max = 1.000;
+
+% Create mask based on chosen histogram thresholds
+sliderBW = ( (I(:,:,1) >= channel1Min) | (I(:,:,1) <= channel1Max) ) & ...
+    (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+    (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+BW = sliderBW;
+
+% Initialize output masked image based on input image.
+maskedRGBImage = RGB;
+
+% Set background pixels where BW is false to zero.
+maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+
+end
+% Mask out all shapes except the Blues ones
+function [BW,maskedRGBImage] = BlueMask(RGB)
+
+% Convert RGB image to chosen color space
+I = rgb2hsv(RGB);
+
+% Define thresholds for channel 1 based on histogram settings
+channel1Min = 0.402;
+channel1Max = 0.761;
+
+% Define thresholds for channel 2 based on histogram settings
+channel2Min = 0.159;
+channel2Max = 1.000;
+
+% Define thresholds for channel 3 based on histogram settings
+channel3Min = 0.000;
+channel3Max = 1.000;
+
+% Create mask based on chosen histogram thresholds
+sliderBW = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max) & ...
+    (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+    (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+BW = sliderBW;
+
+% Initialize output masked image based on input image.
+maskedRGBImage = RGB;
+
+% Set background pixels where BW is false to zero.
+maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+
+end
+% Mask out all shapes except the Green ones
+function [BW,maskedRGBImage] = GreenMask(RGB)
+
+% Convert RGB image to chosen color space
+I = rgb2hsv(RGB);
+
+% Define thresholds for channel 1 based on histogram settings
+channel1Min = 0.131;
+channel1Max = 0.551;
+
+% Define thresholds for channel 2 based on histogram settings
+channel2Min = 0.159;
+channel2Max = 1.000;
+
+% Define thresholds for channel 3 based on histogram settings
+channel3Min = 0.000;
+channel3Max = 1.000;
+
+% Create mask based on chosen histogram thresholds
+sliderBW = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max) & ...
+    (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+    (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+BW = sliderBW;
+
+% Initialize output masked image based on input image.
+maskedRGBImage = RGB;
+
+% Set background pixels where BW is false to zero.
+maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+
+end
+
+
