@@ -59,24 +59,23 @@ if ~doTraining
     net = pretrained.net;
 end
 %% Example to show data type used by the network
-unzip vehicleDatasetImages.zip
-data = load('vehicleDatasetGroundTruth.mat');
-vehicleDataset = data.vehicleDataset;
-vehicleDataset.imageFilename = fullfile(pwd,vehicleDataset.imageFilename);
-
+% unzip vehicleDatasetImages.zip
+% data = load('vehicleDatasetGroundTruth.mat');
+% vehicleDataset = data.vehicleDataset;
+% vehicleDataset.imageFilename = fullfile(pwd,vehicleDataset.imageFilename);
 %% Load and explore image data
 disp('Loading Image Data');
 % get path name
 myFolder = '.\RGBD_Data';
 % collect all file paths for .mat data sets
 classes = {'PNG Red Cube','PNG Red Cylinder','PNG Blue Cube', ...
-    'PNG Blue Cylinder','PNG Green Cube','PNG Green Cylinder'};
+    'PNG Blue Cylinder','PNG Green Cube','PNG Green Cylinder','PNG Green Sphere', 'PNG Green Triangular Prism', 'PNG Red Sphere', 'PNG Red Triangular Prism', 'PNG Blue Sphere', 'PNG Blue Triangular Prism'};
 % Grab all the images in the folder and store in a single folder
 imdatastore = imageDatastore(fullfile(myFolder,... 
     classes), ...
     'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
 % load bounding boxes obtained using image labeling app
-boundingBoxes = load('FullSetBoundingBoxes_2.mat');
+boundingBoxes = load('3shapes_withMix_gTruth.mat');
 
 % Create a combined table of all the data
 DataTable = [boundingBoxes.gTruth.DataSource.Source boundingBoxes.gTruth.LabelData];
@@ -204,7 +203,7 @@ networkOutputs = ["conv2Detection1"
 %% Specify training options
 disp('Specify training options');
 
-numIterations = 2000;
+numIterations = 2500;
 learningRate = 0.001;
 % warmup period = number of iterations to increase learning rate
 %   exponentially based on formula: 
@@ -269,52 +268,52 @@ if doTraining
 end
 
 %% Evaluate Model
-disp('Evaluate Model');
-confidenceThreshold = 0.5;
-overlapThreshold = 0.5;
-
-% Create the test datastore.
-preprocessedTestData = transform(testData,@(data)preprocessData(data,networkInputSize));
-
-% Create a table to hold the bounding boxes, scores, and labels returned by
-% the detector. 
-numImages = size(testDataTbl,1);
-results = table('Size',[numImages 3],...
-    'VariableTypes',{'cell','cell','cell'},...
-    'VariableNames',{'Boxes','Scores','Labels'});
-
-% Run detector on each image in the test set and collect results.
-for i = 1:numImages
-    
-    % Read the datastore and get the image.
-    data = read(preprocessedTestData);
-    I = data{1};
-    
-    % Convert to dlarray. If GPU is available, then convert data to gpuArray.
-    XTest = dlarray(I,'SSCB');
-    if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu"
-        XTest = gpuArray(XTest);
-    end
-    
-    % Run the detector.
-    [bboxes, scores, labels] = yolov3Detect(net, XTest, networkOutputs, anchorBoxes, anchorBoxMasks, confidenceThreshold, overlapThreshold, classNames);
-    
-    % Collect the results.
-    results.Boxes{i} = bboxes;
-    results.Scores{i} = scores;
-    results.Labels{i} = labels;
-end
-
-% Evaluate the object detector using Average Precision metric.
-[ap, recall, precision] = evaluateDetectionPrecision(results, preprocessedTestData);
+% disp('Evaluate Model');
+% confidenceThreshold = 0.5;
+% overlapThreshold = 0.5;
+% 
+% % Create the test datastore.
+% preprocessedTestData = transform(testData,@(data)preprocessData(data,networkInputSize));
+% 
+% % Create a table to hold the bounding boxes, scores, and labels returned by
+% % the detector. 
+% numImages = size(testDataTbl,1);
+% results = table('Size',[numImages 3],...
+%     'VariableTypes',{'cell','cell','cell'},...
+%     'VariableNames',{'Boxes','Scores','Labels'});
+% 
+% % Run detector on each image in the test set and collect results.
+% for i = 1:numImages
+%     
+%     % Read the datastore and get the image.
+%     data = read(preprocessedTestData);
+%     I = data{1};
+%     
+%     % Convert to dlarray. If GPU is available, then convert data to gpuArray.
+%     XTest = dlarray(I,'SSCB');
+%     if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu"
+%         XTest = gpuArray(XTest);
+%     end
+%     
+%     % Run the detector.
+%     [bboxes, scores, labels] = yolov3Detect(net, XTest, networkOutputs, anchorBoxes, anchorBoxMasks, confidenceThreshold, overlapThreshold, classNames);
+%     
+%     % Collect the results.
+%     results.Boxes{i} = bboxes;
+%     results.Scores{i} = scores;
+%     results.Labels{i} = labels;
+% end
+% 
+% % Evaluate the object detector using Average Precision metric.
+% [ap, recall, precision] = evaluateDetectionPrecision(results, preprocessedTestData);
 %%
 % Plot precision-recall curve.
-figure
-plot(cell2mat(recall), cell2mat(precision))
-xlabel('Recall')
-ylabel('Precision')
-grid on
-title(sprintf('Average Precision = %.2f', ap))
+% figure
+% plot(cell2mat(recall), cell2mat(precision))
+% xlabel('Recall')
+% ylabel('Precision')
+% grid on
+% title(sprintf('Average Precision = %.2f', ap))
 %% Predict labels of new data and calculate classification accuracy
 % 
 % YPred = classify(net,imdsValidation);
@@ -323,13 +322,16 @@ title(sprintf('Average Precision = %.2f', ap))
 % accuracy = sum(YPred == YValidation)/numel(YValidation);
 
 %% Detect Object
+confidenceThreshold = 0.6;
+overlapThreshold = 0.4;
 
 % Get the image.
-I = load('C:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data\Multiple Objects\3cubes7.mat');
+I = load('.\RGBD_Data\Mix\039_Mix.mat');
 imgSize = [227 227];
 I = imresize(I.image,imgSize);
 I = im2single(I);
 % Convert to dlarray.
+J = I;
 XTest = dlarray(I,'SSCB');
 
 % If GPU is available, then convert data to gpuArray.
@@ -342,9 +344,14 @@ end
 % Display the detections on image.
 if ~isempty(scores)
     I = insertObjectAnnotation(I, 'rectangle', bboxes, labels);
+    J = insertObjectAnnotation(J, 'rectangle', bboxes, scores);
 end
-figure
-imshow(I)
+f1 = figure(1);
+set(gcf, 'Position', get(0, 'Screensize'));
+subplot(1,2,1);
+imshow(I);
+subplot(1,2,2);
+imshow(J);
 % % get path name
 % multiFolder = 'c:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data';
 % % collect all file paths for .mat data sets
@@ -358,7 +365,11 @@ imshow(I)
 % imshow(MatData.image);
 % 
 % YPred1 = classify(net,multidatastore);
-
+%%
+network.net = net;
+network.anchorBoxes = anchorBoxes;
+network.classNames = classNames;
+save('3shapes_withMix_Network.mat','network');
 %% Functions
 
 % function to read images from .mat files
