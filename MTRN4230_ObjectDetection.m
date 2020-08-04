@@ -30,6 +30,7 @@ Edit History:
 29/07/2020 added point cloud stuff
 08/03/2020 load data from .mat file. 
 03/08/2020 ROI point cloud segmentation
+04/08/2020 Clean up ROI point cloud segmentation, calculate centroids
 
 %}
 function MTRN4230_ObjectDetection()
@@ -73,7 +74,7 @@ function MTRN4230_ObjectDetection()
         imdatastore = imageDatastore(fullfile(myFolder,... 
             loadImages),...
             'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead);
-        filename = imdatastore.Files(11);
+        filename = imdatastore.Files(12);
         loadMat = load(filename{1});
         img = loadMat.image;   
         ptCloud = loadMat.xyz;
@@ -159,15 +160,6 @@ end
 % Function to calculate the centroid of objects in point cloud 
 function centroid = calculateCentroids(pt,Bbox,Label)
     
-    % Convert Bounding boxes to regions of interest 
-    BBox_size = size(Bbox);
-    zMin = zeros(BBox_size(1),1) + 0.6;
-    zMax = zeros(BBox_size(1),1) + 0.7;
-    ROIs = [Bbox(:,1), Bbox(:,1) + Bbox(:,3), ...
-    Bbox(:,2), Bbox(:,2) + Bbox(:,4)];
-    % Convert 
-    ROIs_pt = [(ROIs .* (0.6/227)) - 0.3,zMin,zMax];
-
     % Remove the floor. Assume the point furthest away in the z axis 
     % is the floor
     floor = max(pt(:,3)) - 0.05;
@@ -178,91 +170,49 @@ function centroid = calculateCentroids(pt,Bbox,Label)
     % Reduce the number of samples to aid computation time
     PTCloud = pcdownsample(ptCloudHiRes, 'gridAverage', 0.005);
     
-    %centroid = zeros(BBox_size(1),3);
-    
-
-    % label the groups of points that form a cluster
+    % Convert Bounding boxes to regions of interest 
+    BBox_size = size(Bbox);
+    zMin = zeros(BBox_size(1),1);
+    zMax = zeros(BBox_size(1),1) + 0.8;
+    ROIs = [Bbox(:,1), Bbox(:,1) + Bbox(:,3), ...
+    Bbox(:,2), Bbox(:,2) + Bbox(:,4)];
+    % Convert scale to match point cloud axis
+    ROIs_pt = [(ROIs(:,1:2) .* 0.7/227) - 0.35, ...
+        (ROIs(:,3:4) .* 0.6/227)- 0.3,zMin,zMax];
+   
+    % show point cloud clusters found using ROI
+    centroid = zeros(BBox_size(1),3);
     minDistance = 0.01;
-    [labels,numClusters] = pcsegdist(PTCloud,minDistance);
-    locations = PTCloud.Location;
-    
-    % find out how many points were labelled and create an array
-    % where each 'layer' in allObjects is the coordinates for a 
-    % cluster of points. Each cluster is represented as object1.
-    numLabels = size(labels(:,1),1);
-    %size1 = size1(1);
-    object1 = NaN(numLabels,3);
-    % allObjects = zeros(numLabels,3,numClusters);
-    % objectSizes = zeros(numClusters,1);
-    centroid = zeros(numLabels,3);
-    validObjects = 1;
-    toc;
-    % loop through all the clusters found
-    for clustCnt = 1:1:numClusters
+    figure();
+    title('Point Cloud');
+    hold on;
+    for roiCnt = 1:BBox_size(1)  
         tic
-        % loop through all the labels and store points with the same label
-        % in object1
-        cnt2 = 1;
-        for cnt = 1:1:size(labels)
-            if labels(cnt) == clustCnt
-                object1(cnt2,:) = locations(cnt,:);
-                cnt2 = cnt2 + 1;
-            end
-        end
-        % copy the cluster of points for objects big enough
-        % into allObjects and reset object1
-        % Also count how many objects were found using validObjects
-        if cnt2 > 200
-            % store how many points are in the cluster
-            % objectSizes(validObjects) = cnt2;
-            % find the z coordinate for the top most face
-            topFace = min(object1(:,3));
-            % set points that correspond to the side of the objects to 0
-            object1(object1(:,3) > (topFace + 0.005),:) = 0;
-            % store clusters
-            % allObjects(:,:,validObjects) = object1;
-            % remove NaN and 0 values
-            object1(isnan(object1(:,1)),:) = [];
-            object1(object1(:,1) == 0,:) = [];
-
-            % calculate centroids
-            centroid(validObjects,1) = mean(object1(:,1));
-            centroid(validObjects,2) = mean(object1(:,2)); 
-            centroid(validObjects,3) = mean(object1(:,3)); 
-            validObjects = validObjects + 1;
-        end
-        % reset object1
-        object1 = NaN(numLabels,3);
+        % Obtain small section of point cloud based on ROIs
+        indices = findPointsInROI(PTCloud,ROIs_pt(roiCnt,:));
+        ptCloudROI = select(PTCloud,indices);
+        
+        % label the groups of points that form a cluster
+        labels = pcsegdist(ptCloudROI,minDistance);
+        ptROILocations = ptCloudROI.Location;
+        mainLabel = mode(labels,1);
+    
+        labelobjects = (labels(:,1) == mainLabel);
+        ptROILocations(~labelobjects,:) = [];
+        
+        % find the z coordinate for the top most face
+        topFace = min(ptROILocations(:,3));
+        % set points that correspond to the side of the objects to 0
+        ptROILocations(ptROILocations(:,3) > (topFace + 0.005),:) = [];
+        % calculate centroids
+        centroid(roiCnt,1) = mean(ptROILocations(:,1));
+        centroid(roiCnt,2) = mean(ptROILocations(:,2)); 
+        centroid(roiCnt,3) = mean(ptROILocations(:,3)); 
+                
+        pcshow(ptROILocations,'g');       
         toc
     end
-    % Correct value for validObjects
-    %validObjects = validObjects - 1;
-    % Remove the zero values from when the arrays were initialised.  
-    %objectSizes(objectSizes == 0) = [];
-    centroid(centroid(:,1) == 0,:) = [];
-    %allObjects = allObjects(:,:,1:validObjects);
-    disp('Centroids ');
-    disp(centroid);
-    disp('BBoxes ');
-    disp(Bbox);
-    disp('Labels ');
-    disp(Label);
-    % Show the centroids on the original point cloud
-    figure();
-    hold on;
-    pcshow(locations,[0 0 1]);
-    title('Point Cloud');
     pcshow(centroid,[1 0 0]);
-    
-    for roiCnt = 1:BBox_size(1)  
-        disp(ROIs_pt(roiCnt,:));
-        indices = findPointsInROI(PTCloud,ROIs_pt(roiCnt,:));
-        
-        ptCloudB = select(PTCloud,indices);
-        pcshow(ptCloudB.Location,'g');
-        %pcshow(indices);
-        
-    end
     hold off;
 end
 
