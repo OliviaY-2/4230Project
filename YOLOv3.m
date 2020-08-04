@@ -10,13 +10,18 @@ Object Detection Using YOLO v3 Deep Learning
 https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-deep-learning.html
 
 Instructions:
-    Set names for folders with data for variable 'classes'.
+    Set names for folders with image data for variable 'classes'.
     Set 'doTraining' variable if you want to train a network or used a
     pretrained one.
     In load data, set value for DataTable to either use custom images or
     try out with vehicle images given by example.
     Set 'boundingBoxes' variables to load bounding boxes from a .mat file 
     created using image labeller app.
+
+    To classify an image without training the entire network, the following
+    function is needed.
+    - yolov3Detect(net, XTest, networkOutputs, anchorBoxes, anchorBoxMasks, 
+      confidenceThreshold, overlapThreshold, classNames)
 
 Edit History:
 13/07/2020 created file
@@ -41,7 +46,10 @@ Edit History:
     table with bounding boxes and image file paths, similar to example data
     given. Also ran using example data with vehicles, which appears to work
     fine.
-    
+28/07/2020 Looked over bounding boxes again. Removed images that were
+    touching the edge of the figure border. Also edited bounding boxes so 
+    that they did not touch the figure border. Training and classification
+    was successful.
 
 %}
 close all;
@@ -59,10 +67,10 @@ if ~doTraining
     net = pretrained.net;
 end
 %% Example to show data type used by the network
-unzip vehicleDatasetImages.zip
-data = load('vehicleDatasetGroundTruth.mat');
-vehicleDataset = data.vehicleDataset;
-vehicleDataset.imageFilename = fullfile(pwd,vehicleDataset.imageFilename);
+% unzip vehicleDatasetImages.zip
+% data = load('vehicleDatasetGroundTruth.mat');
+% vehicleDataset = data.vehicleDataset;
+% vehicleDataset.imageFilename = fullfile(pwd,vehicleDataset.imageFilename);
 
 %% Load and explore image data
 disp('Loading Image Data');
@@ -78,7 +86,8 @@ imdatastore = imageDatastore(fullfile(myFolder,...
 % load bounding boxes obtained using image labeling app
 boundingBoxes = load('FullSetBoundingBoxes_2.mat');
 
-% Create a combined table of all the data
+% Create a combined table of all the data. Column one has file names to
+% images, column 2 for bounding boxes
 DataTable = [boundingBoxes.gTruth.DataSource.Source boundingBoxes.gTruth.LabelData];
 DataTable.Properties.VariableNames{1} = 'imageFilename';
 %DataTable(~cellfun('isempty',DataTable));
@@ -270,8 +279,7 @@ end
 
 %% Evaluate Model
 disp('Evaluate Model');
-confidenceThreshold = 0.5;
-overlapThreshold = 0.5;
+
 
 % Create the test datastore.
 preprocessedTestData = transform(testData,@(data)preprocessData(data,networkInputSize));
@@ -315,23 +323,18 @@ xlabel('Recall')
 ylabel('Precision')
 grid on
 title(sprintf('Average Precision = %.2f', ap))
-%% Predict labels of new data and calculate classification accuracy
-% 
-% YPred = classify(net,imdsValidation);
-% YValidation = imdsValidation.Labels;
-% 
-% accuracy = sum(YPred == YValidation)/numel(YValidation);
 
 %% Detect Object
 
 % Get the image.
-I = load('C:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data\Multiple Objects\3cubes7.mat');
+I = load('C:\Users\User\Documents\UNSW\MTRN4230\Git Repo\4230Project\RGBD_Data\Multiple Objects\04_Cubes_and_ Cylinders.mat');
 imgSize = [227 227];
 I = imresize(I.image,imgSize);
 I = im2single(I);
 % Convert to dlarray.
 XTest = dlarray(I,'SSCB');
-
+confidenceThreshold = 0.5;
+overlapThreshold = 0.5;
 % If GPU is available, then convert data to gpuArray.
 if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu"
     XTest = gpuArray(XTest);

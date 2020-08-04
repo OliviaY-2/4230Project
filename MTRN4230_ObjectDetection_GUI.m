@@ -18,8 +18,7 @@ Instructions:
     Current set up uses .mat file holding data saved in RGBG_Data\Mix folder.
     To go back to ROS, set 'ROS_Used' to 1.
     Run code. 
-    Type 'yes' to obtain and classify and image
-    Type 'no' to end program
+
 Edit History:
 28/07/2020 created file
 29/07/2020 added point cloud stuff
@@ -38,7 +37,7 @@ function MTRN4230_ObjectDetection_GUI()
     % option to automatically check for GPU.
     executionEnvironment = "auto";
     % Choose .mat file with pretrained network and variables
-    DetectVariables = load('YOLOv3_Detect_variables.mat');
+    DetectVariables = load('Network Training stuff\YOLOv3_Detect_variables.mat');
     % Deep learning neural network variables
     Net = DetectVariables.net;
     NetworkOutputs = ["conv2Detection1"
