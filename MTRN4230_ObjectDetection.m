@@ -16,10 +16,11 @@ Instructions:
     obtained by saving variables 'net','anchorBoxes' and 'classNames' after
     training a network using YOLOv3.m
 
+    Also remember to add Parallel Computing Toolbox.
+
     Choose ipaddress to connect to ROS and Gazebo
-    Current set up uses .mat file holding data saved in RGBG_Data folder.
-    To go back to ROS, uncomment code initialising ROS and Obtaining image
-    from ROS.
+    Current set up uses .mat file holding data saved in RGBG_Data\Mix folder.
+    To go back to ROS, set 'ROS_Used' to 1.
 
     Run code. 
     Type 'yes' to obtain and classify and image
@@ -30,17 +31,21 @@ Edit History:
 29/07/2020 added point cloud stuff
 08/03/2020 load data from .mat file. 
 03/08/2020 ROI point cloud segmentation
-04/08/2020 Clean up ROI point cloud segmentation, calculate centroids
+04/08/2020 Clean up ROI point cloud segmentation, calculate centroids, if
+    statement to check if any objects were detected
 
 %}
 function MTRN4230_ObjectDetection()
     % Set ipaddress for ROS connection
     ipaddress = '192.168.56.101';
+    % Choose if Ros connection is used to obtain data
     ROS_Used = 0;
-    
-    % Deep learning neural network variables
+       
+    % option to automatically check for GPU.
     executionEnvironment = "auto";
+    % Choose .mat file with pretrained network and variables
     DetectVariables = load('YOLOv3_Detect_variables.mat');
+    % Deep learning neural network variables
     Net = DetectVariables.net;
     NetworkOutputs = ["conv2Detection1"
     "conv2Detection2"
@@ -49,32 +54,35 @@ function MTRN4230_ObjectDetection()
     AnchorBoxMasks = {[1,2,3]
         [4,5,6]
         };
-    ConfidenceThreshold = 0.6;
-    OverlapThreshold = 0.3;
     ClassNames = DetectVariables.classNames;
     imgSize = [227 227];
+    % Classification threshold values. Change to increase possible range of
+    % objects to classify if scores are low. 
+    ConfidenceThreshold = 0.6;
+    OverlapThreshold = 0.3;
 
     % % Colour options: 'all_c', 'red', 'green', 'blue'.
     % desiredColour = 'all_c';
     % % Shape options: 'all_s', 'Cube', 'Cylinder', 'Rectangle'.
     % desireShapes = 'all_s';
 
-    % Obtain an image to classify
     disp('Obtain images for classification');
     
-        % Initialise ROS
     if ROS_Used == 1
+        % Initialise ROS
         rosshutdown;
         disp('Initialising Ros Subscriber');
         rosinit(ipaddress);
     else
+        % Otherwise, create image datastore and load information from a
+        % .mat file.
         myFolder = '.\RGBD_Data';
         loadImages = 'Mix';
         disp(['Obtain image from ',myFolder]);
         imdatastore = imageDatastore(fullfile(myFolder,... 
             loadImages),...
             'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead);
-        filename = imdatastore.Files(12);
+        filename = imdatastore.Files(11);
         loadMat = load(filename{1});
         img = loadMat.image;   
         ptCloud = loadMat.xyz;
@@ -92,23 +100,26 @@ function MTRN4230_ObjectDetection()
             case 'yes'
                 % Obtain image from Gazebo using ROS topics
                 if ROS_Used == 1
-                    [img, ptCloud, camPose] = obtainImage();
+                    [img, ptCloud, ~] = obtainImage();
                 end
                 % Object classification
                 disp('Classify objects in image');
                 % HSV mask image to remove grey floor, grey parts of arm
                 % and purple box
-                [BW,maskedRGBImage] = createMask(img);
-                % Resize to input into network.
+                [~,maskedRGBImage] = createMask(img);
+                % Resize and modify image to input into network.
                 I_resize = imresize(maskedRGBImage,imgSize);
                 I = im2single(I_resize);
                 % Classify objects in image
-                [Bboxes, Scores, Labels] = classifyImage(I,executionEnvironment, ...
+                [Bboxes, ~, Labels] = classifyImage(I,executionEnvironment, ...
                     Net, NetworkOutputs,AnchorBoxes,AnchorBoxMasks, ConfidenceThreshold, ...
                     OverlapThreshold, ClassNames);
-                Centroids = calculateCentroids(ptCloud,Bboxes,Labels);
-                disp(Labels);
+                % If objects were classified, find centroid in point cloud
+                if ~isempty(Labels)
+                    Centroids = calculateCentroids(ptCloud,Bboxes);
+                end
             otherwise
+                % Print for invalid inputs
                 disp("Invalid. Options include 'yes' or 'no'."); 
         end
     end
@@ -144,11 +155,8 @@ function [bboxes, scores, labels] = classifyImage(I,execution_Environment, ...
     if (execution_Environment == "auto" && canUseGPU) || execution_Environment == "gpu"
         XTest = gpuArray(XTest);
     end
-    
-    tic
     [bboxes, scores, labels] = yolov3Detect(net,XTest, networkOutputs,anchorBoxes,anchorBoxMasks, confidenceThreshold, ...
         overlapThreshold, classNames);
-    toc
     % Display the detections on image.
     if ~isempty(scores)
         I = insertObjectAnnotation(I, 'rectangle', bboxes, labels);
@@ -158,7 +166,7 @@ function [bboxes, scores, labels] = classifyImage(I,execution_Environment, ...
 end
 
 % Function to calculate the centroid of objects in point cloud 
-function centroid = calculateCentroids(pt,Bbox,Label)
+function centroid = calculateCentroids(pt,Bbox)
     
     % Remove the floor. Assume the point furthest away in the z axis 
     % is the floor
@@ -179,7 +187,6 @@ function centroid = calculateCentroids(pt,Bbox,Label)
     % Convert scale to match point cloud axis
     ROIs_pt = [(ROIs(:,1:2) .* 0.7/227) - 0.35, ...
         (ROIs(:,3:4) .* 0.6/227)- 0.3,zMin,zMax];
-   
     % show point cloud clusters found using ROI
     centroid = zeros(BBox_size(1),3);
     minDistance = 0.01;
@@ -195,14 +202,17 @@ function centroid = calculateCentroids(pt,Bbox,Label)
         % label the groups of points that form a cluster
         labels = pcsegdist(ptCloudROI,minDistance);
         ptROILocations = ptCloudROI.Location;
+        % Find the most dominant label
         mainLabel = mode(labels,1);
-    
+        % Keep points for most dominant object/label, remove everything
+        % else
         labelobjects = (labels(:,1) == mainLabel);
         ptROILocations(~labelobjects,:) = [];
         
         % find the z coordinate for the top most face
         topFace = min(ptROILocations(:,3));
-        % set points that correspond to the side of the objects to 0
+        % Remove points that correspond to the side of the objects by
+        % keeping top most face only
         ptROILocations(ptROILocations(:,3) > (topFace + 0.005),:) = [];
         % calculate centroids
         centroid(roiCnt,1) = mean(ptROILocations(:,1));
