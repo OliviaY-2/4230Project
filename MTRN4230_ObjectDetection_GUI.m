@@ -122,10 +122,10 @@ function MTRN4230_ObjectDetection_GUI()
                 end
                 
                 % Choose which shape is desired
-                answer = inputdlg('Enter shape: Cube, Cylinder, Triangular Prism, All','Shape Input',[1 35],{''});
+                answer = inputdlg('Enter shape: Cube, Cylinder, Tri, All','Shape Input',[1 35],{''});
                 shapeInput = char(answer(1,1));
                 switch shapeInput
-                    case {'Cube', 'Cylinder', 'Triangular Prism', 'All'}
+                    case {'Cube', 'Cylinder', 'Tri', 'All'}
                         desiredShapes = strcat('_',shapeInput);
                     otherwise
                         disp('Invalid shape');
