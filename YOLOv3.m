@@ -75,7 +75,7 @@ imdatastore = imageDatastore(fullfile(myFolder,...
     classes), ...
     'LabelSource', 'foldernames', 'FileExtensions', '.png'); 
 % load bounding boxes obtained using image labeling app
-boundingBoxes = load('3shapes_withMix_gTruth.mat');
+boundingBoxes = load('gridMix_gTruth.mat');
 
 % Create a combined table of all the data
 DataTable = [boundingBoxes.gTruth.DataSource.Source boundingBoxes.gTruth.LabelData];
@@ -203,7 +203,7 @@ networkOutputs = ["conv2Detection1"
 %% Specify training options
 disp('Specify training options');
 
-numIterations = 2500;
+numIterations = 2800;
 learningRate = 0.001;
 % warmup period = number of iterations to increase learning rate
 %   exponentially based on formula: 
@@ -326,7 +326,7 @@ confidenceThreshold = 0.6;
 overlapThreshold = 0.4;
 
 % Get the image.
-I = load('.\RGBD_Data\Mix\039_Mix.mat');
+I = load('.\RGBD_Data\Mix\41_Mix.mat');
 imgSize = [227 227];
 I = imresize(I.image,imgSize);
 I = im2single(I);
@@ -339,7 +339,7 @@ if (executionEnvironment == "auto" && canUseGPU) || executionEnvironment == "gpu
     XTest = gpuArray(XTest);
 end
 
-[bboxes, scores, labels] = yolov3Detect(net, XTest, networkOutputs, anchorBoxes, anchorBoxMasks, confidenceThreshold, overlapThreshold, classNames);
+[bboxes, scores, labels] = yolov3Detect(network.net, XTest, networkOutputs, anchorBoxes, anchorBoxMasks, confidenceThreshold, overlapThreshold, classNames);
 
 % Display the detections on image.
 if ~isempty(scores)
@@ -369,7 +369,7 @@ imshow(J);
 network.net = net;
 network.anchorBoxes = anchorBoxes;
 network.classNames = classNames;
-save('3shapes_withMix_Network.mat','network');
+save('gridMix_Network.mat','network');
 %% Functions
 
 % function to read images from .mat files
