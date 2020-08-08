@@ -18,176 +18,6 @@
 			<pose>1 1 1 0.000000 0 0</pose>
 		</include>
 
-    <population name ="green_cube_pop">
-			<model name="green_cube_model">
-				<include>
-					<static>true</static>
-					<uri>model://green_cube</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="blue_cube_pop">
-			<model name="blue_cube_model">
-				<include>
-					<static>true</static>
-					<uri>model://blue_cube</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="red_cube_pop">
-			<model name="red_cube_model">
-				<include>
-					<static>true</static>
-					<uri>model://red_cube</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="green_long_pop">
-			<model name="green_long_model">
-				<include>
-					<static>true</static>
-					<uri>model://green_longboi</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="blue_long_pop">
-			<model name="blue_long_model">
-				<include>
-					<static>true</static>
-					<uri>model://blue_longboi</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="red_long_pop">
-			<model name="red_long_model">
-				<include>
-					<static>true</static>
-					<uri>model://red_longboi</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="green_sphere_pop">
-			<model name="green_sphere_model">
-				<include>
-					<static>true</static>
-					<uri>model://green_sphere</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="blue_sphere_pop">
-			<model name="blue_sphere_model">
-				<include>
-					<static>true</static>
-					<uri>model://blue_sphere</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="red_sphere_pop">
-			<model name="red_sphere_model">
-				<include>
-					<static>true</static>
-					<uri>model://red_sphere</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="green_cylinder_pop">
-			<model name="green_cylinder_model">
-				<include>
-					<static>true</static>
-					<uri>model://green_cylinder</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
     <population name ="blue_cylinder_pop">
 			<model name="blue_cylinder_model">
 				<include>
@@ -195,43 +25,9 @@
 					<uri>model://blue_cylinder</uri>
 				</include>
 			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
+			<pose>-0.415 -1.345 0.25 0 0 0</pose>
 			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="red_cylinder_pop">
-			<model name="red_cylinder_model">
-				<include>
-					<static>true</static>
-					<uri>model://red_cylinder</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
-			</box>
-			<model_count>1</model_count>
-			<distribution>
-				<type>random</type>
-			</distribution>
-		</population>
-
-    <population name ="green_triangle_pop">
-			<model name="green_triangle_model">
-				<include>
-					<static>true</static>
-					<uri>model://green_triangle</uri>
-				</include>
-			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
-			<box>
-				<size>1.75 0.75 0.01</size>
+				<size>0.125 0.125 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -246,9 +42,26 @@
 					<uri>model://blue_triangle</uri>
 				</include>
 			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
+			<pose>-0.255 -1.345 0.25 0 0 0</pose>
 			<box>
-				<size>1.75 0.75 0.01</size>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+		<population name ="red_cube_pop">
+			<model name="red_cube_model">
+				<include>
+					<static>true</static>
+					<uri>model://red_cube</uri>
+				</include>
+			</model>
+			<pose>-0.095 -1.345 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -263,9 +76,196 @@
 					<uri>model://red_triangle</uri>
 				</include>
 			</model>
-			<pose>0 -1.25 0.25 0 0 0</pose>
+			<pose>0.065 -1.345 0.25 0 0 0</pose>
 			<box>
-				<size>1.75 0.75 0.01</size>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+		<population name ="blue_cube_pop">
+			<model name="blue_cube_model">
+				<include>
+					<static>true</static>
+					<uri>model://blue_cube</uri>
+				</include>
+			</model>
+			<pose>0.225 -1.345 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="green_cylinder_pop">
+			<model name="green_cylinder_model">
+				<include>
+					<static>true</static>
+					<uri>model://green_cylinder</uri>
+				</include>
+			</model>
+			<pose>-0.415 -1.185 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="blue_cylinder_pop2">
+			<model name="blue_cylinder_model2">
+				<include>
+					<static>true</static>
+					<uri>model://blue_cylinder</uri>
+				</include>
+			</model>
+			<pose>-0.255 -1.185 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="green_triangle_pop">
+			<model name="green_triangle_model">
+				<include>
+					<static>true</static>
+					<uri>model://green_triangle</uri>
+				</include>
+			</model>
+			<pose>-0.095 -1.185 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="red_triangle_pop2">
+			<model name="red_triangle_model2">
+				<include>
+					<static>true</static>
+					<uri>model://red_triangle</uri>
+				</include>
+			</model>
+			<pose>0.065 -1.185 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="green_cube_pop">
+			<model name="green_cube_model">
+				<include>
+					<static>true</static>
+					<uri>model://green_cube</uri>
+				</include>
+			</model>
+			<pose>0.225 -1.185 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="red_triangle_pop3">
+			<model name="red_triangle_model3">
+				<include>
+					<static>true</static>
+					<uri>model://red_triangle</uri>
+				</include>
+			</model>
+			<pose>-0.415 -1.025 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+		<population name ="red_cube_pop2">
+			<model name="red_cube_model2">
+				<include>
+					<static>true</static>
+					<uri>model://red_cube</uri>
+				</include>
+			</model>
+			<pose>-0.255 -1.025 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="green_triangle_pop2">
+			<model name="green_triangle_model2">
+				<include>
+					<static>true</static>
+					<uri>model://green_triangle</uri>
+				</include>
+			</model>
+			<pose>-0.095 -1.025 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+    <population name ="green_cylinder_pop2">
+			<model name="green_cylinder_model2">
+				<include>
+					<static>true</static>
+					<uri>model://green_cylinder</uri>
+				</include>
+			</model>
+			<pose>0.065 -1.025 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
+			</box>
+			<model_count>1</model_count>
+			<distribution>
+				<type>random</type>
+			</distribution>
+		</population>
+
+		<population name ="red_cylinder_pop">
+			<model name="red_cylinder_model">
+				<include>
+					<static>true</static>
+					<uri>model://red_cylinder</uri>
+				</include>
+			</model>
+			<pose>0.225 -1.025 0.25 0 0 0</pose>
+			<box>
+				<size>0.125 0.125 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
