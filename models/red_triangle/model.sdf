@@ -8,7 +8,7 @@
         <geometry>
           <mesh>
 						<uri>model://red_triangle/meshes/triangular_prism.dae</uri>
-						<scale>0.05 0.05 0.056</scale>
+						<scale>0.04 0.04 0.056</scale>
 					</mesh>
         </geometry>
       </collision>
@@ -16,7 +16,7 @@
         <geometry>
           <mesh>
 						<uri>model://red_triangle/meshes/triangular_prism.dae</uri>
-						<scale>0.05 0.05 0.056</scale>
+						<scale>0.04 0.04 0.056</scale>
 					</mesh>
         </geometry>
         <material>
