@@ -37,17 +37,17 @@ function MTRN4230_ObjectDetection_GUI()
     % option to automatically check for GPU.
     executionEnvironment = "auto";
     % Choose .mat file with pretrained network and variables
-    DetectVariables = load('Network Training stuff\YOLOv3_Detect_variables.mat');
+    DetectVariables = load('gridMix_Network.mat');
     % Deep learning neural network variables
-    Net = DetectVariables.net;
+    Net = DetectVariables.network.net;
     NetworkOutputs = ["conv2Detection1"
     "conv2Detection2"
     ];
-    AnchorBoxes = DetectVariables.anchorBoxes;
+    AnchorBoxes = DetectVariables.network.anchorBoxes;
     AnchorBoxMasks = {[1,2,3]
         [4,5,6]
         };
-    ClassNames = DetectVariables.classNames;
+    ClassNames = DetectVariables.network.classNames;
     imgSize = [227 227];
     % Classification threshold values. Change to increase possible range of
     % objects to classify if scores are low. 
@@ -62,16 +62,8 @@ function MTRN4230_ObjectDetection_GUI()
         disp('Initialising Ros Subscriber');
         rosinit(ipaddress);
     else
-        % Otherwise, create image datastore and load information from a
-        % .mat file.
-        myFolder = '.\RGBD_Data';
-        loadImages = 'Mix';
-        disp(['Obtain image from ',myFolder]);
-        imdatastore = imageDatastore(fullfile(myFolder,... 
-            loadImages),...
-            'LabelSource', 'foldernames', 'FileExtensions', '.mat','ReadFcn',@matRead);
-        filename = imdatastore.Files(11);
-        loadMat = load(filename{1});
+        % Otherwise, load information from a .mat file.
+        loadMat = load('.\RGBD_Data\Mix\039_Mix.mat');
         img = loadMat.image;   
         ptCloud = loadMat.xyz;
     end
@@ -101,8 +93,8 @@ function MTRN4230_ObjectDetection_GUI()
                 %number of picks selected
                 answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
                 no_of_picks = str2double(answer{1});
-                if no_of_picks < 10
-                    disp('Too Few Picks');
+                if no_of_picks > 10
+                    disp('Too Many Picks, choose a number less than or equal to 10');
                     continue
                 elseif isnan(no_of_picks)
                     disp('Invalid Input');
