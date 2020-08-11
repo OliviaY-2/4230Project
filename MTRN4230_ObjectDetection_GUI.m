@@ -28,7 +28,8 @@ Edit History:
     statement to check if any objects were detected, choose colour and
     shape, GUI
 11/08/2020 Set up function to publish info to ros node. Now checks how many
-    objects are requested.
+    objects are requested. Wait for ros topic MATLAB to return message
+    saying task is complete
 %}
 function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
@@ -172,13 +173,18 @@ function MTRN4230_ObjectDetection_GUI()
                         disp(['Camera could only find ',num2str(centroidNum),' object(s)']);
                         no_of_picks = centroidNum;
                     end
-                    
                     %if ROS_Used == 1
                         publishInfo(Centroids(1:no_of_picks,:));
+                        % Wait for a return message, confirming the task
+                        % was completed
+%                         TaskFlag = rossubscriber('/MATLAB');
+%                         TaskComplete = receive(TaskFlag);
+%                         disp(TaskComplete.Data);
                     %end
                 else
                     disp('No Objects Found');
                 end
+                
             otherwise
                 % Print for invalid inputs
                 disp("Invalid. Options include 'yes' or 'no'."); 
@@ -201,10 +207,10 @@ function [image, depthxyz, posdata] = obtainImage()
     toc
 
 end
-
+% Publish centroid values to ROS topic
 function publishInfo(CentroidList)
     disp(CentroidList);
-    % = rospublisher('/MATLAB', 'std_msgs/String');
+    %chatterpub = rospublisher('/MATLAB', 'std_msgs/String');
     pause(1);
     for CentroidCnt = 1:size(CentroidList,1)
         %chattermsg = rosmessage(chatterpub);
