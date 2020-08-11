@@ -27,6 +27,8 @@ Edit History:
 04/08/2020 Clean up ROI point cloud segmentation, calculate centroids, if
     statement to check if any objects were detected, choose colour and
     shape, GUI
+11/08/2020 Set up function to publish info to ros node. Now checks how many
+    objects are requested.
 %}
 function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
@@ -51,7 +53,7 @@ function MTRN4230_ObjectDetection_GUI()
     imgSize = [227 227];
     % Classification threshold values. Change to increase possible range of
     % objects to classify if scores are low. 
-    ConfidenceThreshold = 0.6;
+    ConfidenceThreshold = 0.65;
     OverlapThreshold = 0.5;
 
     disp('Obtain images for classification');
@@ -63,7 +65,7 @@ function MTRN4230_ObjectDetection_GUI()
         rosinit(ipaddress);
     else
         % Otherwise, load information from a .mat file.
-        loadMat = load('.\RGBD_Data\Mix\039_Mix.mat');
+        loadMat = load('.\RGBD_Data\Mix\159_Mix.mat');
         img = loadMat.image;   
         ptCloud = loadMat.xyz;
     end
@@ -72,7 +74,6 @@ function MTRN4230_ObjectDetection_GUI()
     flag = 1;
     while flag == 1
         % Wait for input from command line
-        
         quest = 'Do you want to process a new image?';
         userInput = questdlg(quest,'userInput');
         %userInput = input("Do you want to process a new image?: ", 's');
@@ -93,7 +94,7 @@ function MTRN4230_ObjectDetection_GUI()
                 %number of picks selected
                 answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
                 no_of_picks = str2double(answer{1});
-                if no_of_picks > 10
+                if no_of_picks > 20
                     disp('Too Many Picks, choose a number less than or equal to 10');
                     continue
                 elseif isnan(no_of_picks)
@@ -166,6 +167,17 @@ function MTRN4230_ObjectDetection_GUI()
                 % If desired objects were classified, find centroid in point cloud
                 if ~isempty(Bboxes)
                     Centroids = calculateCentroids(ptCloud,Bboxes);
+                    centroidNum = size(Centroids,1);
+                    if no_of_picks > centroidNum
+                        disp(['Camera could only find ',num2str(centroidNum),' object(s)']);
+                        no_of_picks = centroidNum;
+                    end
+                    
+                    %if ROS_Used == 1
+                        publishInfo(Centroids(1:no_of_picks,:));
+                    %end
+                else
+                    disp('No Objects Found');
                 end
             otherwise
                 % Print for invalid inputs
@@ -187,11 +199,25 @@ function [image, depthxyz, posdata] = obtainImage()
     depthxyz_data = receive(pcsub);
     depthxyz = readXYZ(depthxyz_data);
     toc
-    %     % Obtain desired shapes and colours
-    %     chatSub = rossubscriber('/chatter');
-    %     chat = receive(chatSub);
-    %     message = chat.LatestMessage;
 
+end
+
+function publishInfo(CentroidList)
+    disp(CentroidList);
+    % = rospublisher('/MATLAB', 'std_msgs/String');
+    pause(1);
+    for CentroidCnt = 1:size(CentroidList,1)
+        %chattermsg = rosmessage(chatterpub);
+        chattermsg.Data = num2str(CentroidList(CentroidCnt,1));
+        %send(chatterpub,chattermsg)
+        disp(chattermsg.Data);
+        chattermsg.Data = num2str(CentroidList(CentroidCnt,2));
+        %send(chatterpub,chattermsg)
+        disp(chattermsg.Data);
+        chattermsg.Data = num2str(CentroidList(CentroidCnt,3));
+        %send(chatterpub,chattermsg)
+        disp(chattermsg.Data);
+    end
 end
 
 % Function to classify objects in image using pre-trained YOLOv3 network
