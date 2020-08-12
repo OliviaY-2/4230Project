@@ -1,5 +1,6 @@
 % MTRN4230 Object detection
-% Author: Lucas Way, Diana Huang, Arthur Ching
+% Author: Lucas Way
+% Additional contributors: Diana Huang, Arthur Ching
 % First made (DD/MM/YYY): 28/07/2020
 %{
 Connect to a ROS topic, obtain an image, classify the objects using YOLOv3
@@ -9,7 +10,7 @@ Reference:
 Object Detection Using YOLO v3 Deep Learning
 https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-deep-learning.html
 Instructions:
-    Load variables from YOLOv3_Detect_variables.mat. These are used for
+    Load variables from gridMix_Network.mat. These are used for
     yolov3 deep neural network detection function. This folder can be
     obtained by saving variables 'net','anchorBoxes' and 'classNames' after
     training a network using YOLOv3.m
@@ -29,13 +30,16 @@ Edit History:
     shape, GUI
 11/08/2020 Set up function to publish info to ros node. Now checks how many
     objects are requested. Wait for ros topic MATLAB to return message
-    saying task is complete
+    saying task is complete.
+12/08/2020 Changed point cloud bounding box scaling. Tested successfully 
+    with trajectory planner python script, can receive
+    images + depth data and send coordinates.
 %}
 function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
     ipaddress = '192.168.56.101';
     % Choose if Ros connection is used to obtain data
-    ROS_Used = 0;
+    ROS_Used = 1;
        
     % option to automatically check for GPU.
     executionEnvironment = "auto";
@@ -55,7 +59,7 @@ function MTRN4230_ObjectDetection_GUI()
     % Classification threshold values. Change to increase possible range of
     % objects to classify if scores are low. 
     ConfidenceThreshold = 0.65;
-    OverlapThreshold = 0.5;
+    OverlapThreshold = 0.3;
 
     disp('Obtain images for classification');
     
@@ -96,7 +100,7 @@ function MTRN4230_ObjectDetection_GUI()
                 answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
                 no_of_picks = str2double(answer{1});
                 if no_of_picks > 20
-                    disp('Too Many Picks, choose a number less than or equal to 10');
+                    disp('Too Many Picks, choose a number less than or equal to 20');
                     continue
                 elseif isnan(no_of_picks)
                     disp('Invalid Input');
@@ -174,7 +178,8 @@ function MTRN4230_ObjectDetection_GUI()
                         no_of_picks = centroidNum;
                     end
                     %if ROS_Used == 1
-                        publishInfo(Centroids(1:no_of_picks,:));
+                    disp("Publishing Data");
+                    publishInfo(Centroids(1:no_of_picks,:));
                         % Wait for a return message, confirming the task
                         % was completed
 %                         TaskFlag = rossubscriber('/MATLAB');
@@ -209,19 +214,17 @@ function [image, depthxyz, posdata] = obtainImage()
 end
 % Publish centroid values to ROS topic
 function publishInfo(CentroidList)
+    
     disp(CentroidList);
-    %chatterpub = rospublisher('/MATLAB', 'std_msgs/String');
+    chatterpub = rospublisher('/MATLAB', 'std_msgs/String');
     pause(1);
     for CentroidCnt = 1:size(CentroidList,1)
-        %chattermsg = rosmessage(chatterpub);
-        chattermsg.Data = num2str(CentroidList(CentroidCnt,1));
-        %send(chatterpub,chattermsg)
+        chattermsg = rosmessage(chatterpub);
+        chattermsg.Data = num2str(CentroidList(CentroidCnt,1) * -1.0);
+        send(chatterpub,chattermsg)
         disp(chattermsg.Data);
-        chattermsg.Data = num2str(CentroidList(CentroidCnt,2));
-        %send(chatterpub,chattermsg)
-        disp(chattermsg.Data);
-        chattermsg.Data = num2str(CentroidList(CentroidCnt,3));
-        %send(chatterpub,chattermsg)
+        chattermsg.Data = num2str(CentroidList(CentroidCnt,2) - 0.5);
+        send(chatterpub,chattermsg)
         disp(chattermsg.Data);
     end
 end
@@ -266,8 +269,8 @@ function centroid = calculateCentroids(pt,Bbox)
     ROIs = [Bbox(:,1), Bbox(:,1) + Bbox(:,3), ...
     Bbox(:,2), Bbox(:,2) + Bbox(:,4)];
     % Convert scale to match point cloud axis
-    ROIs_pt = [(ROIs(:,1:2) .* 0.7/227) - 0.35, ...
-        (ROIs(:,3:4) .* 0.6/227)- 0.3,zMin,zMax];
+    ROIs_pt = [(ROIs(:,1:2) .* 0.8/227) - 0.4, ...
+        (ROIs(:,3:4) .* 0.75/227)- 0.375,zMin,zMax];
     % show point cloud clusters found using ROI
     centroid = zeros(BBox_size(1),3);
     minDistance = 0.01;
@@ -295,7 +298,7 @@ function centroid = calculateCentroids(pt,Bbox)
         % Remove points that correspond to the side of the objects by
         % keeping top most face only
         ptROILocations(ptROILocations(:,3) > (topFace + 0.005),:) = [];
-        % calculate centroids
+        % calculate centroids and make relative to robot base coordinates
         centroid(roiCnt,1) = mean(ptROILocations(:,1));
         centroid(roiCnt,2) = mean(ptROILocations(:,2)); 
         centroid(roiCnt,3) = mean(ptROILocations(:,3)); 
