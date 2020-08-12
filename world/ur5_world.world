@@ -15,8 +15,7 @@
 		<!-- kinect -->
 		<include>
 			<uri>model://kinect_ros</uri>
-			<static>true</static>
-			<pose>0.0 -1.25 1.0 1.5708 1.5708 0</pose>
+			<pose>1 1 1 0.000000 0 0</pose>
 		</include>
 
     <population name ="blue_cylinder_pop">
@@ -28,7 +27,7 @@
 			</model>
 			<pose>-0.3 -1.4 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -45,7 +44,7 @@
 			</model>
 			<pose>-0.14 -1.4 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -62,7 +61,7 @@
 			</model>
 			<pose>0.02 -1.4 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -79,7 +78,7 @@
 			</model>
 			<pose>0.17 -1.4 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -96,7 +95,7 @@
 			</model>
 			<pose>0.32 -1.4 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -113,7 +112,7 @@
 			</model>
 			<pose>-0.3 -1.22 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -130,7 +129,7 @@
 			</model>
 			<pose>-0.14 -1.22 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -147,7 +146,7 @@
 			</model>
 			<pose>0.05 -1.22 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -164,7 +163,7 @@
 			</model>
 			<pose>0.17 -1.22 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -181,7 +180,7 @@
 			</model>
 			<pose>0.32 -1.22 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -198,7 +197,7 @@
 			</model>
 			<pose>-0.3 -1.08 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -215,7 +214,7 @@
 			</model>
 			<pose>-0.14 -1.08 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -232,7 +231,7 @@
 			</model>
 			<pose>0.05 -1.08 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -249,7 +248,7 @@
 			</model>
 			<pose>0.17 -1.08 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
@@ -266,7 +265,7 @@
 			</model>
 			<pose>0.32 -1.08 0.25 0 0 0</pose>
 			<box>
-				<size>0.125 0.125 0.01</size>
+				<size>0.1 0.1 0.01</size>
 			</box>
 			<model_count>1</model_count>
 			<distribution>
