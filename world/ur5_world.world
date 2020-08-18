@@ -16,17 +16,17 @@
 		<include>
 			<uri>model://kinect_ros</uri>
 			<static>true</static>
-			<pose>0.0 -1.25 1.0 1.5708 1.5708 0</pose>
+			<pose>0.0 -1.25 0.7875 1.5708 1.5708 0</pose>
 		</include>
 
     <population name ="blue_cylinder_pop">
 			<model name="blue_cylinder_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://blue_cylinder</uri>
 				</include>
 			</model>
-			<pose>-0.3 -1.4 0.25 0 0 0</pose>
+			<pose>-0.3 -1.4 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -39,11 +39,11 @@
     <population name ="blue_triangle_pop">
 			<model name="blue_triangle_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://blue_triangle</uri>
 				</include>
 			</model>
-			<pose>-0.14 -1.4 0.25 0 0 0</pose>
+			<pose>-0.14 -1.4 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -56,11 +56,11 @@
 		<population name ="red_cube_pop">
 			<model name="red_cube_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://red_cube</uri>
 				</include>
 			</model>
-			<pose>0.02 -1.4 0.25 0 0 0</pose>
+			<pose>0.02 -1.4 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -73,11 +73,11 @@
     <population name ="red_triangle_pop">
 			<model name="red_triangle_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://red_triangle</uri>
 				</include>
 			</model>
-			<pose>0.17 -1.4 0.25 0 0 0</pose>
+			<pose>0.17 -1.4 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -90,11 +90,11 @@
 		<population name ="blue_cube_pop">
 			<model name="blue_cube_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://blue_cube</uri>
 				</include>
 			</model>
-			<pose>0.32 -1.4 0.25 0 0 0</pose>
+			<pose>0.32 -1.4 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -107,11 +107,11 @@
     <population name ="green_cylinder_pop">
 			<model name="green_cylinder_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://green_cylinder</uri>
 				</include>
 			</model>
-			<pose>-0.3 -1.22 0.25 0 0 0</pose>
+			<pose>-0.3 -1.22 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -124,11 +124,11 @@
     <population name ="blue_cylinder_pop2">
 			<model name="blue_cylinder_model2">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://blue_cylinder</uri>
 				</include>
 			</model>
-			<pose>-0.14 -1.22 0.25 0 0 0</pose>
+			<pose>-0.14 -1.22 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -141,11 +141,11 @@
     <population name ="green_triangle_pop">
 			<model name="green_triangle_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://green_triangle</uri>
 				</include>
 			</model>
-			<pose>0.05 -1.22 0.25 0 0 0</pose>
+			<pose>0.05 -1.22 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -158,11 +158,11 @@
     <population name ="red_triangle_pop2">
 			<model name="red_triangle_model2">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://red_triangle</uri>
 				</include>
 			</model>
-			<pose>0.17 -1.22 0.25 0 0 0</pose>
+			<pose>0.17 -1.22 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -175,11 +175,11 @@
     <population name ="green_cube_pop">
 			<model name="green_cube_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://green_cube</uri>
 				</include>
 			</model>
-			<pose>0.32 -1.22 0.25 0 0 0</pose>
+			<pose>0.32 -1.22 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -192,11 +192,11 @@
     <population name ="red_triangle_pop3">
 			<model name="red_triangle_model3">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://red_triangle</uri>
 				</include>
 			</model>
-			<pose>-0.3 -1.08 0.25 0 0 0</pose>
+			<pose>-0.3 -1.08 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -209,11 +209,11 @@
 		<population name ="red_cube_pop2">
 			<model name="red_cube_model2">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://red_cube</uri>
 				</include>
 			</model>
-			<pose>-0.14 -1.08 0.25 0 0 0</pose>
+			<pose>-0.14 -1.08 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -226,11 +226,11 @@
     <population name ="green_triangle_pop2">
 			<model name="green_triangle_model2">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://green_triangle</uri>
 				</include>
 			</model>
-			<pose>0.05 -1.08 0.25 0 0 0</pose>
+			<pose>0.05 -1.08 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -243,11 +243,11 @@
     <population name ="green_cylinder_pop2">
 			<model name="green_cylinder_model2">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://green_cylinder</uri>
 				</include>
 			</model>
-			<pose>0.17 -1.08 0.25 0 0 0</pose>
+			<pose>0.17 -1.08 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -260,11 +260,11 @@
 		<population name ="red_cylinder_pop">
 			<model name="red_cylinder_model">
 				<include>
-					<static>true</static>
+					<static>false</static>
 					<uri>model://red_cylinder</uri>
 				</include>
 			</model>
-			<pose>0.32 -1.08 0.25 0 0 0</pose>
+			<pose>0.32 -1.08 0.0375 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
