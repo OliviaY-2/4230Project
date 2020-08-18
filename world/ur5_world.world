@@ -19,6 +19,12 @@
 			<pose>0.0 -1.25 0.7875 1.5708 1.5708 0</pose>
 		</include>
 
+		<include>
+			<uri>model://black_table</uri>
+			<static>true</static>
+			<pose>0 -1.25 0 0 0 1.57</pose>
+		</include>
+
     <population name ="blue_cylinder_pop">
 			<model name="blue_cylinder_model">
 				<include>
@@ -26,7 +32,7 @@
 					<uri>model://blue_cylinder</uri>
 				</include>
 			</model>
-			<pose>-0.3 -1.4 0.0375 0 0 0</pose>
+			<pose>-0.3 -1.4 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -43,7 +49,7 @@
 					<uri>model://blue_triangle</uri>
 				</include>
 			</model>
-			<pose>-0.14 -1.4 0.0375 0 0 0</pose>
+			<pose>-0.14 -1.4 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -60,7 +66,7 @@
 					<uri>model://red_cube</uri>
 				</include>
 			</model>
-			<pose>0.02 -1.4 0.0375 0 0 0</pose>
+			<pose>0.02 -1.4 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -77,7 +83,7 @@
 					<uri>model://red_triangle</uri>
 				</include>
 			</model>
-			<pose>0.17 -1.4 0.0375 0 0 0</pose>
+			<pose>0.17 -1.4 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -94,7 +100,7 @@
 					<uri>model://blue_cube</uri>
 				</include>
 			</model>
-			<pose>0.32 -1.4 0.0375 0 0 0</pose>
+			<pose>0.32 -1.4 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -111,7 +117,7 @@
 					<uri>model://green_cylinder</uri>
 				</include>
 			</model>
-			<pose>-0.3 -1.22 0.0375 0 0 0</pose>
+			<pose>-0.3 -1.22 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -128,7 +134,7 @@
 					<uri>model://blue_cylinder</uri>
 				</include>
 			</model>
-			<pose>-0.14 -1.22 0.0375 0 0 0</pose>
+			<pose>-0.14 -1.22 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -145,7 +151,7 @@
 					<uri>model://green_triangle</uri>
 				</include>
 			</model>
-			<pose>0.05 -1.22 0.0375 0 0 0</pose>
+			<pose>0.05 -1.22 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -162,7 +168,7 @@
 					<uri>model://red_triangle</uri>
 				</include>
 			</model>
-			<pose>0.17 -1.22 0.0375 0 0 0</pose>
+			<pose>0.17 -1.22 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -179,7 +185,7 @@
 					<uri>model://green_cube</uri>
 				</include>
 			</model>
-			<pose>0.32 -1.22 0.0375 0 0 0</pose>
+			<pose>0.32 -1.22 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -196,7 +202,7 @@
 					<uri>model://red_triangle</uri>
 				</include>
 			</model>
-			<pose>-0.3 -1.08 0.0375 0 0 0</pose>
+			<pose>-0.3 -1.08 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -213,7 +219,7 @@
 					<uri>model://red_cube</uri>
 				</include>
 			</model>
-			<pose>-0.14 -1.08 0.0375 0 0 0</pose>
+			<pose>-0.14 -1.08 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -230,7 +236,7 @@
 					<uri>model://green_triangle</uri>
 				</include>
 			</model>
-			<pose>0.05 -1.08 0.0375 0 0 0</pose>
+			<pose>0.05 -1.08 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -247,7 +253,7 @@
 					<uri>model://green_cylinder</uri>
 				</include>
 			</model>
-			<pose>0.17 -1.08 0.0375 0 0 0</pose>
+			<pose>0.17 -1.08 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
@@ -264,7 +270,7 @@
 					<uri>model://red_cylinder</uri>
 				</include>
 			</model>
-			<pose>0.32 -1.08 0.0375 0 0 0</pose>
+			<pose>0.32 -1.08 0.5 0 0 0</pose>
 			<box>
 				<size>0.1 0.1 0.01</size>
 			</box>
