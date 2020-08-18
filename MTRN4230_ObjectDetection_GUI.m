@@ -34,6 +34,8 @@ Edit History:
 12/08/2020 Changed point cloud bounding box scaling. Tested successfully 
     with trajectory planner python script, can receive
     images + depth data and send coordinates.
+16/08/2020 wait for arm to send message of completed task before requesting
+    more shapes.
 %}
 function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
@@ -182,9 +184,9 @@ function MTRN4230_ObjectDetection_GUI()
                     publishInfo(Centroids(1:no_of_picks,:));
                         % Wait for a return message, confirming the task
                         % was completed
-%                         TaskFlag = rossubscriber('/MATLAB');
-%                         TaskComplete = receive(TaskFlag);
-%                         disp(TaskComplete.Data);
+                    TaskFlag = rossubscriber('/TaskComplete');
+                    TaskComplete = receive(TaskFlag);
+                    disp(TaskComplete.Data);
                     %end
                 else
                     disp('No Objects Found');
