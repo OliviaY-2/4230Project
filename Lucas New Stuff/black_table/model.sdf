@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="black_table">
+    <link name="link">
+			<gravity>1</gravity>
+      <pose>0 0 0 0 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+						<uri>model://black_table/meshes/table.dae</uri>
+						<scale>0.15 0.15 0.1</scale>
+					</mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+						<uri>model://black_table/meshes/table.dae</uri>
+						<scale>0.15 0.15 0.1</scale>
+					</mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+	    <name>Gazebo/Black</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

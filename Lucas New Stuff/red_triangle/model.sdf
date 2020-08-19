@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="red_triangle">
+    <gravity>1</gravity>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+						<uri>model://red_triangle/meshes/triangular_prism.dae</uri>
+						<scale>0.04 0.04 0.03831</scale>
+					</mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+						<uri>model://red_triangle/meshes/triangular_prism.dae</uri>
+						<scale>0.04 0.04 0.03831</scale>
+					</mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+	    <name>Gazebo/Red</name>
+          </script>
+        </material>
+      </visual>
+      <inertial>
+          <inertia>
+            <ixx>0</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0</iyy>
+            <iyz>0</iyz>
+            <izz>0</izz>
+          </inertia>
+          <mass>0.005</mass>
+        </inertial>
+    </link>
+  </model>
+</sdf>

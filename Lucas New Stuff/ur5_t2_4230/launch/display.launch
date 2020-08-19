@@ -22,7 +22,7 @@
   </include>
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
-  <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model robot -z 0.255 -y -0.75" respawn="false" output="screen" />
+  <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model robot -z 0.55 -y -0.7" respawn="false" output="screen" />
 
   <include file="$(find ur_gazebo)/launch/controller_utils.launch"/>
 
@@ -39,9 +39,9 @@
 </include>
 
 <!-- Spawn the table -->
-	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/table.urdf -urdf -model table -y -1.15 -x 0.0 -z 0.0"/>
+	<!--node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/table.urdf -urdf -model table -y -1.25 -x 0.0 -z 0.0"/-->
 	
 	<!-- Spawn the container that holds the items picked up -->
-	<node name="spawn_container" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/container.urdf -urdf -model container -y -0.9 -x -0.73 -z 0.25"/>
+	<node name="spawn_container" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/container.urdf -urdf -model container -y -0.85 -x -0.73 -z 0.5"/>
 
 </launch>
