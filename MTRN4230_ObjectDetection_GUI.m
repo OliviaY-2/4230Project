@@ -10,14 +10,16 @@ Reference:
 Object Detection Using YOLO v3 Deep Learning
 https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-deep-learning.html
 Instructions:
-    Load variables from gridMix_Network.mat. These are used for
+    Load variables from gridMix_Network2.mat. These are used for
     yolov3 deep neural network detection function. This folder can be
     obtained by saving variables 'net','anchorBoxes' and 'classNames' after
     training a network using YOLOv3.m
-    Also remember to add Parallel Computing Toolbox.
-    Choose ipaddress to connect to ROS and Gazebo
-    Current set up uses .mat file holding data saved in RGBG_Data\Mix folder.
-    To go back to ROS, set 'ROS_Used' to 1.
+    Also remember to add Parallel Computing, Machine learning, deep learning,
+    image processing and computer vision Toolboxes.
+    Choose ipaddress to connect to ROS and Gazebo.
+    Current set up can use .mat files holding data saved in RGBG_Data\Mix folder 
+    or use images obtained online using ROS.
+    To use ROS, set 'ROS_Used' to 1.
     Run code. 
 
 Edit History:
@@ -36,6 +38,7 @@ Edit History:
     images + depth data and send coordinates.
 16/08/2020 wait for arm to send message of completed task before requesting
     more shapes.
+18/08/2020 uses newly trained network (gridMix_Network2.mat)
 %}
 function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
@@ -46,7 +49,7 @@ function MTRN4230_ObjectDetection_GUI()
     % option to automatically check for GPU.
     executionEnvironment = "auto";
     % Choose .mat file with pretrained network and variables
-    DetectVariables = load('gridMix_Network.mat');
+    DetectVariables = load('gridMix_Network2.mat');
     % Deep learning neural network variables
     Net = DetectVariables.network.net;
     NetworkOutputs = ["conv2Detection1"
@@ -96,7 +99,7 @@ function MTRN4230_ObjectDetection_GUI()
             case 'Yes'
                 % Obtain image from Gazebo using ROS topics
                 if ROS_Used == 1
-                    [img, ptCloud, ~] = obtainImage();
+                    [img, ptCloud] = obtainImage();
                 end
                 %number of picks selected
                 answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
@@ -200,21 +203,21 @@ function MTRN4230_ObjectDetection_GUI()
 end
 
 % Obtain image, depth data and camera pose from ROS topic
-function [image, depthxyz, posdata] = obtainImage()
+function [image, depthxyz] = obtainImage()
     disp("Getting new image..");
     tic
-    blockposes = rossubscriber('/gazebo/link_states');
-    posdata = receive(blockposes);
+    % Obtain RGB image
     imsub = rossubscriber('/camera/color/image_raw');
     image_data = receive(imsub);
     image = readImage(image_data);
+    % Obtain depth values
     pcsub = rossubscriber('/camera/depth/points');
     depthxyz_data = receive(pcsub);
     depthxyz = readXYZ(depthxyz_data);
     toc
-
 end
-% Publish centroid values to ROS topic
+% Publish centroid values to ROS topic. Values are adjusted to make
+% coordinates relative to base of robot arm, not the camera.
 function publishInfo(CentroidList)
     
     disp(CentroidList);
@@ -222,9 +225,11 @@ function publishInfo(CentroidList)
     pause(1);
     for CentroidCnt = 1:size(CentroidList,1)
         chattermsg = rosmessage(chatterpub);
+        % Adjust x coordinate and publish
         chattermsg.Data = num2str(CentroidList(CentroidCnt,1) * -1.0);
         send(chatterpub,chattermsg)
         disp(chattermsg.Data);
+        % Adjust y coordinate and publish
         chattermsg.Data = num2str(CentroidList(CentroidCnt,2) - 0.5);
         send(chatterpub,chattermsg)
         disp(chattermsg.Data);
@@ -264,7 +269,7 @@ function centroid = calculateCentroids(pt,Bbox)
     % Reduce the number of samples to aid computation time
     PTCloud = pcdownsample(ptCloudHiRes, 'gridAverage', 0.005);
     
-    % Convert Bounding boxes to regions of interest 
+    % Convert Bounding box coordinates to regions of interest coordinates
     BBox_size = size(Bbox);
     zMin = zeros(BBox_size(1),1);
     zMax = zeros(BBox_size(1),1) + 0.8;
@@ -273,7 +278,7 @@ function centroid = calculateCentroids(pt,Bbox)
     % Convert scale to match point cloud axis
     ROIs_pt = [(ROIs(:,1:2) .* 0.8/227) - 0.4, ...
         (ROIs(:,3:4) .* 0.75/227)- 0.375,zMin,zMax];
-    % show point cloud clusters found using ROI
+
     centroid = zeros(BBox_size(1),3);
     minDistance = 0.01;
     figure();
@@ -300,14 +305,15 @@ function centroid = calculateCentroids(pt,Bbox)
         % Remove points that correspond to the side of the objects by
         % keeping top most face only
         ptROILocations(ptROILocations(:,3) > (topFace + 0.005),:) = [];
-        % calculate centroids and make relative to robot base coordinates
+        % calculate centroids
         centroid(roiCnt,1) = mean(ptROILocations(:,1));
         centroid(roiCnt,2) = mean(ptROILocations(:,2)); 
         centroid(roiCnt,3) = mean(ptROILocations(:,3)); 
-                
+        % show point cloud clusters found using ROI                
         pcshow(ptROILocations,'g');       
         toc
     end
+    % show centroid locations
     pcshow(centroid,[1 0 0]);
     hold off;
 end
