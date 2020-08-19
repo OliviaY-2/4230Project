@@ -42,6 +42,6 @@
 	<!--node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/table.urdf -urdf -model table -y -1.25 -x 0.0 -z 0.0"/-->
 	
 	<!-- Spawn the container that holds the items picked up -->
-	<node name="spawn_container" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/container.urdf -urdf -model container -y -0.85 -x -0.73 -z 0.5"/>
+	<!--node name="spawn_container" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/container.urdf -urdf -model container -y -0.85 -x -0.73 -z 0.5"/-->
 
 </launch>
