@@ -63,7 +63,7 @@ function MTRN4230_ObjectDetection_GUI()
     imgSize = [227 227];
     % Classification threshold values. Change to increase possible range of
     % objects to classify if scores are low. 
-    ConfidenceThreshold = 0.65;
+    ConfidenceThreshold = 0.7;
     OverlapThreshold = 0.3;
 
     disp('Obtain images for classification');
@@ -185,11 +185,18 @@ function MTRN4230_ObjectDetection_GUI()
                     %if ROS_Used == 1
                     disp("Publishing Data");
                     publishInfo(Centroids(1:no_of_picks,:));
-                        % Wait for a return message, confirming the task
-                        % was completed
-                    TaskFlag = rossubscriber('/TaskComplete');
-                    TaskComplete = receive(TaskFlag);
-                    disp(TaskComplete.Data);
+                    % Wait for a return message, confirming the task
+                    % was completed. Otherwise display progress in task
+                    TaskComplete.Data = " ";
+                    while TaskComplete.Data ~= "task completed"
+                        TaskFlag = rossubscriber('/TaskComplete');
+                        TaskComplete = receive(TaskFlag);
+                        if TaskComplete.Data == "task completed"
+                            disp(TaskComplete.Data); 
+                        else
+                            disp([TaskComplete.Data,'/',num2str(no_of_picks), ' objects picked up']);
+                        end
+                    end
                     %end
                 else
                     disp('No Objects Found');
@@ -220,7 +227,7 @@ end
 % coordinates relative to base of robot arm, not the camera.
 function publishInfo(CentroidList)
     
-    disp(CentroidList);
+    %disp(CentroidList);
     chatterpub = rospublisher('/MATLAB', 'std_msgs/String');
     pause(1);
     for CentroidCnt = 1:size(CentroidList,1)
@@ -228,11 +235,11 @@ function publishInfo(CentroidList)
         % Adjust x coordinate and publish
         chattermsg.Data = num2str(CentroidList(CentroidCnt,1) * -1.0);
         send(chatterpub,chattermsg)
-        disp(chattermsg.Data);
+        %disp(chattermsg.Data);
         % Adjust y coordinate and publish
-        chattermsg.Data = num2str(CentroidList(CentroidCnt,2) - 0.5);
+        chattermsg.Data = num2str(CentroidList(CentroidCnt,2) - 0.55);
         send(chatterpub,chattermsg)
-        disp(chattermsg.Data);
+        %disp(chattermsg.Data);
     end
 end
 
@@ -285,7 +292,7 @@ function centroid = calculateCentroids(pt,Bbox)
     title('Point Cloud');
     hold on;
     for roiCnt = 1:BBox_size(1)  
-        tic
+        % tic
         % Obtain small section of point cloud based on ROIs
         indices = findPointsInROI(PTCloud,ROIs_pt(roiCnt,:));
         ptCloudROI = select(PTCloud,indices);
@@ -311,7 +318,7 @@ function centroid = calculateCentroids(pt,Bbox)
         centroid(roiCnt,3) = mean(ptROILocations(:,3)); 
         % show point cloud clusters found using ROI                
         pcshow(ptROILocations,'g');       
-        toc
+        % toc
     end
     % show centroid locations
     pcshow(centroid,[1 0 0]);
