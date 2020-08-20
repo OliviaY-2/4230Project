@@ -19,7 +19,7 @@ import time
 
 bin_x = -0.73
 bin_y = -0.15
-travel_height = 0.4
+travel_height = 0.3
 pick_height = 0.0145
 bin_height = 0.1
 #CoordX = 0.0
@@ -242,8 +242,9 @@ class MoveGroupPythonIntefaceTutorial(object):
     # for this tutorial.
     (plan, fraction) = move_group.compute_cartesian_path(
                                         waypoints,   # waypoints to follow
-                                        0.01,        # eef_step
-                                        0.0)         # jump_threshold
+                                        0.1,        # eef_step
+                                        0.0,
+                                        True)         # jump_threshold
 
     # Note: We are just planning, not asking move_group to actually move the robot yet:
     return plan, fraction
@@ -305,8 +306,9 @@ class MoveGroupPythonIntefaceTutorial(object):
       # for this tutorial.
       (plan, fraction) = move_group.compute_cartesian_path(
                                           waypoints,   # waypoints to follow
-                                          0.01,        # eef_step
-                                          0.0)         # jump_threshold
+                                          0.1,        # eef_step
+                                          0.0,
+                                          True)         # jump_threshold
 
       # Note: We are just planning, not asking move_group to actually move the robot yet:
       return plan, fraction
@@ -372,7 +374,7 @@ def main():
   raw_input()
   tutorial = MoveGroupPythonIntefaceTutorial()
   
-
+  objectcnt = 0
   while not rospy.is_shutdown():
 
     if CoordList:         #If the GUIList has items to look for
@@ -410,7 +412,6 @@ def main():
         #raw_input()
         tutorial.execute_plan(cartesian_plan)
 
-        # trigger(1)
         GripperPub.publish("1")
         time.sleep(0.5)
         cartesian_plan, fraction = MoveGroupPythonIntefaceTutorial.plan_bin_path(tutorial,CoordX,CoordY)
@@ -422,8 +423,7 @@ def main():
         print "============ Press `Enter` to execute a saved path ..."
         #raw_input()
         tutorial.execute_plan(cartesian_plan)
-        
-        # trigger(0)
+
         GripperPub.publish("0")
         # print "============ Press `Enter` to add a box to the planning scene ..."
         # raw_input()
@@ -437,12 +437,15 @@ def main():
         # raw_input()
         # cartesian_plan, fraction = tutorial.plan_cartesian_path(scale=-1)
         # tutorial.execute_plan(cartesian_plan)
-
+        objectcnt = objectcnt + 1
+        str1 = str(objectcnt)
+        TaskPub.publish(str1)
       except rospy.ROSInterruptException:
         return
       except KeyboardInterrupt:
         return  
     else:
+        objectcnt = 0
         str1 = "task completed"
         TaskPub.publish(str1)
 
