@@ -39,6 +39,8 @@ Edit History:
 16/08/2020 wait for arm to send message of completed task before requesting
     more shapes.
 18/08/2020 uses newly trained network (gridMix_Network2.mat)
+20/08/2020 show progress in tasks, take 2 images since Gazebo appears to
+    lag 
 %}
 function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
@@ -216,6 +218,8 @@ function [image, depthxyz] = obtainImage()
     % Obtain RGB image
     imsub = rossubscriber('/camera/color/image_raw');
     image_data = receive(imsub);
+    %Do it again because the kinect camera sometimes gets the wrong image
+    image_data = receive(imsub);
     image = readImage(image_data);
     % Obtain depth values
     pcsub = rossubscriber('/camera/depth/points');
@@ -321,6 +325,7 @@ function centroid = calculateCentroids(pt,Bbox)
         % toc
     end
     % show centroid locations
+    centroid(isnan(centroid(:,1)),:) = [];
     pcshow(centroid,[1 0 0]);
     hold off;
 end
