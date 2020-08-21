@@ -6,21 +6,28 @@
 Connect to a ROS topic, obtain an image, classify the objects using YOLOv3
 deep learning method, find location of object using point cloud, return
 desired centroids.
+
 Reference:
 Object Detection Using YOLO v3 Deep Learning
 https://au.mathworks.com/help/vision/examples/object-detection-using-yolo-v3-deep-learning.html
+
 Instructions:
-    Load variables from gridMix_Network2.mat. These are used for
+    -Load variables from gridMix_Network2.mat. These are used for
     yolov3 deep neural network detection function. This folder can be
     obtained by saving variables 'net','anchorBoxes' and 'classNames' after
     training a network using YOLOv3.m
-    Also remember to add Parallel Computing, Machine learning, deep learning,
+
+    -Also remember to add Parallel Computing, Machine learning, deep learning,
     image processing and computer vision Toolboxes.
-    Choose ipaddress to connect to ROS and Gazebo.
-    Current set up can use .mat files holding data saved in RGBG_Data\Mix folder 
+
+    -Choose ipaddress to connect to ROS and Gazebo.
+
+    -Code can use .mat files holding data saved in RGBG_Data\Mix folder 
     or use images obtained online using ROS.
-    To use ROS, set 'ROS_Used' to 1.
-    Run code. 
+
+    -To use ROS, set 'ROS_Used' to 1.
+
+    -Run code. 
 
 Edit History:
 28/07/2020 created file
@@ -41,12 +48,15 @@ Edit History:
 18/08/2020 uses newly trained network (gridMix_Network2.mat)
 20/08/2020 show progress in tasks, take 2 images since Gazebo appears to
     lag 
+21/08/2020 edit buttons, now loops and asks for input again instead of
+    starting from the beginning. Add confirmation if pick and place should
+    continue if not enough objects are picked
 %}
 function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
     ipaddress = '192.168.56.101';
     % Choose if Ros connection is used to obtain data
-    ROS_Used = 1;
+    ROS_Used = 0;
        
     % option to automatically check for GPU.
     executionEnvironment = "auto";
@@ -85,57 +95,72 @@ function MTRN4230_ObjectDetection_GUI()
     % Create loop to continue asking for user inputs.
     flag = 1;
     while flag == 1
-        % Wait for input from command line
+        % Wait for input from gui
         quest = 'Do you want to process a new image?';
-        userInput = questdlg(quest,'userInput');
-        %userInput = input("Do you want to process a new image?: ", 's');
+        % Set button names and a final default button if return is pressed
+        userInput = questdlg(quest,'userInput','Yes','No','Close All','Yes');
 
         switch userInput
             case 'No'
                 % Exit loop
-                flag = 0;
-            case 'Cancel'
-                % Exit loop
+                break;
+            case 'Close All'
+                % Exit loop and close all open figures
                 close all;
-                flag = 0;
+                %flag = 0;
+                break;
             case 'Yes'
                 % Obtain image from Gazebo using ROS topics
                 if ROS_Used == 1
                     [img, ptCloud] = obtainImage();
                 end
-                %number of picks selected
-                answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
-                no_of_picks = str2double(answer{1});
-                if no_of_picks > 20
-                    disp('Too Many Picks, choose a number less than or equal to 20');
-                    continue
-                elseif isnan(no_of_picks)
-                    disp('Invalid Input');
-                    continue
-                end
-                 
-                % Choose which colour is desired
-                answer = inputdlg('Enter colour: Red, Green, Blue, All','Colour Input',[1 35],{''});
-                colourInput = char(answer(1,1));
-                switch colourInput
-                    case {'Red', 'Green', 'Blue', 'All'}
-                        desiredColour = colourInput;
-                    otherwise
-                        disp('Invalid colour');
-                        continue;
+                
+                validInput = 0;
+                while validInput == 0
+                    %number of picks selected
+                    answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
+                    no_of_picks = str2double(answer{1});
+                    if no_of_picks > 15
+                        disp('Too Many Picks, choose a number less than or equal to 15');
+                        % continue
+                    elseif isnan(no_of_picks)
+                        disp('Invalid Input');
+                        % continue
+                    else
+                        validInput = 1;
+                    end
                 end
                 
-                % Choose which shape is desired
-                answer = inputdlg('Enter shape: Cube, Cylinder, Tri, All','Shape Input',[1 35],{''});
-                shapeInput = char(answer(1,1));
-                switch shapeInput
-                    case {'Cube', 'Cylinder', 'Tri', 'All'}
-                        desiredShapes = strcat('_',shapeInput);
-                    otherwise
-                        disp('Invalid shape');
-                        continue;
+                validInput = 0;
+                while validInput == 0
+                    % Choose which colour is desired
+                    answer = inputdlg('Enter colour: Red, Green, Blue, All','Colour Input',[1 35],{''});
+                    colourInput = char(answer(1,1));
+                    switch colourInput
+                        case {'Red', 'Green', 'Blue', 'All'}
+                            desiredColour = colourInput;
+                            validInput = 1;
+                        otherwise
+                            disp('Invalid colour');
+                            %continue;
+                    end
                 end
-                              
+                
+                validInput = 0;
+                while validInput == 0
+                    % Choose which shape is desired
+                    answer = inputdlg('Enter shape: Cube, Cylinder, Tri, All','Shape Input',[1 35],{''});
+                    shapeInput = char(answer(1,1));
+                    switch shapeInput
+                        case {'Cube', 'Cylinder', 'Tri', 'All'}
+                            desiredShapes = strcat('_',shapeInput);
+                            validInput = 1;
+                        otherwise
+                            disp('Invalid shape');
+                            %continue;
+                    end
+                end
+                
                 % Object classification
                 disp('Classify objects in image');
                 % HSV mask image to remove unwanted colours, grey floor, grey parts of arm
@@ -180,33 +205,52 @@ function MTRN4230_ObjectDetection_GUI()
                 if ~isempty(Bboxes)
                     Centroids = calculateCentroids(ptCloud,Bboxes);
                     centroidNum = size(Centroids,1);
+                    % Check if enough objects were identified to pick up
                     if no_of_picks > centroidNum
-                        disp(['Camera could only find ',num2str(centroidNum),' object(s)']);
+                        %disp(['Camera could only find ',num2str(centroidNum),' object(s)']);
                         no_of_picks = centroidNum;
+                        % If not enough are available, check with the user
+                        % if they wish to continue
+                        quest = ['Camera could only find ',num2str(centroidNum),' object(s). Do you wish to continue?'];
+                        % Set button names and a final default button if return is pressed
+                        too_Few = questdlg(quest,'too_Few','Yes','No','Close All','Yes');
+                        switch too_Few
+                            case 'No'
+                                continue;
+                            case 'Close All'
+                                % Exit loop
+                                close all;
+                                break;
+                            case 'Yes'
+                        end
+                        
                     end
-                    %if ROS_Used == 1
-                    disp("Publishing Data");
-                    publishInfo(Centroids(1:no_of_picks,:));
-                    % Wait for a return message, confirming the task
-                    % was completed. Otherwise display progress in task
-                    TaskComplete.Data = " ";
-                    while TaskComplete.Data ~= "task completed"
-                        TaskFlag = rossubscriber('/TaskComplete');
-                        TaskComplete = receive(TaskFlag);
-                        if TaskComplete.Data == "task completed"
-                            disp(TaskComplete.Data); 
-                        else
-                            disp([TaskComplete.Data,'/',num2str(no_of_picks), ' objects picked up']);
+                    disp(['Publishing ',num2str(no_of_picks),' object(s)']);
+                    % if ros is being used, publish the coordinates
+                    if ROS_Used == 1
+                        % publish coordinates to the robot arm
+                        disp("Publishing Data");
+                        publishInfo(Centroids(1:no_of_picks,:));
+                        % Wait for a return message, confirming the task
+                        % was completed. Otherwise display progress in task
+                        TaskComplete.Data = " ";
+                        while TaskComplete.Data ~= "task completed"
+                            TaskFlag = rossubscriber('/TaskComplete');
+                            TaskComplete = receive(TaskFlag);
+                            if TaskComplete.Data == "task completed"
+                                disp(TaskComplete.Data); 
+                            else
+                                disp([TaskComplete.Data,'/',num2str(no_of_picks), ' objects picked up']);
+                            end
                         end
                     end
-                    %end
                 else
                     disp('No Objects Found');
                 end
                 
             otherwise
                 % Print for invalid inputs
-                disp("Invalid. Options include 'yes' or 'no'."); 
+                disp("Invalid. Options include 'yes', 'no' or 'close all'."); 
         end
     end
 end
