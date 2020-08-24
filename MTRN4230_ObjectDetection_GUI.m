@@ -20,14 +20,14 @@ Instructions:
     -Also remember to add Parallel Computing, Machine learning, deep learning,
     image processing and computer vision Toolboxes.
 
-    -Choose ipaddress to connect to ROS and Gazebo.
+    -Set ipaddress to connect to ROS and Gazebo.
 
     -Code can use .mat files holding data saved in RGBG_Data\Mix folder 
     or use images obtained online using ROS.
 
     -To use ROS, set 'ROS_Used' to 1.
 
-    -Run code. 
+    -Run code and provide value for GUIs. 
 
 Edit History:
 28/07/2020 created file
@@ -51,7 +51,12 @@ Edit History:
 21/08/2020 edit buttons, now loops and asks for input again instead of
     starting from the beginning. Add confirmation if pick and place should
     continue if not enough objects are picked
+24/08/2020 edit how gui works. Now asks for colour and shape, processes
+    image then asks for number of picks. Check for number of picks now
+    integrated. No longer has an additional GUI if too many picks were
+    requested.
 %}
+
 function MTRN4230_ObjectDetection_GUI()
     % Set ipaddress for ROS connection
     ipaddress = '192.168.56.101';
@@ -95,7 +100,7 @@ function MTRN4230_ObjectDetection_GUI()
     % Create loop to continue asking for user inputs.
     flag = 1;
     while flag == 1
-        % Wait for input from gui
+        % Wait for input from gui to begin processing an image
         quest = 'Do you want to process a new image?';
         % Set button names and a final default button if return is pressed
         userInput = questdlg(quest,'userInput','Yes','No','Close All','Yes');
@@ -107,28 +112,12 @@ function MTRN4230_ObjectDetection_GUI()
             case 'Close All'
                 % Exit loop and close all open figures
                 close all;
-                %flag = 0;
                 break;
             case 'Yes'
-                % Obtain image from Gazebo using ROS topics
+                % Obtain image from Gazebo using ROS topics and begin
+                % processing image
                 if ROS_Used == 1
                     [img, ptCloud] = obtainImage();
-                end
-                
-                validInput = 0;
-                while validInput == 0
-                    %number of picks selected
-                    answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
-                    no_of_picks = str2double(answer{1});
-                    if no_of_picks > 15
-                        disp('Too Many Picks, choose a number less than or equal to 15');
-                        % continue
-                    elseif isnan(no_of_picks)
-                        disp('Invalid Input');
-                        % continue
-                    else
-                        validInput = 1;
-                    end
                 end
                 
                 validInput = 0;
@@ -161,7 +150,6 @@ function MTRN4230_ObjectDetection_GUI()
                     end
                 end
                 
-                % Object classification
                 disp('Classify objects in image');
                 % HSV mask image to remove unwanted colours, grey floor, grey parts of arm
                 % and purple box
@@ -183,7 +171,7 @@ function MTRN4230_ObjectDetection_GUI()
                 [Bboxes, ~, Labels] = classifyImage(I,executionEnvironment, ...
                     Net, NetworkOutputs,AnchorBoxes,AnchorBoxMasks, ConfidenceThreshold, ...
                     OverlapThreshold, ClassNames);
-                % Remove bounding box values if specified
+                % Remove bounding box values of unwanted objects if specified
                 if ~strcmp(desiredShapes,'_All')
                     % determine if desired object shape was detected by
                     % checking each label
@@ -193,6 +181,7 @@ function MTRN4230_ObjectDetection_GUI()
                         OneLabel = char(Labels(LabelCnt,1));
                         % If label contains name of shape, find all labels with
                         % that name and add logical value to desiredLabels
+                        % desiredLables is a vector of 0's and 1's
                         if contains(OneLabel, desiredShapes)
                             desiredLabels = desiredLabels |(Labels(:,1) == OneLabel);
                         end
@@ -201,30 +190,31 @@ function MTRN4230_ObjectDetection_GUI()
                     % list
                     Bboxes(~desiredLabels,:) = [];
                 end
-                % If desired objects were classified, find centroid in point cloud
+                % Check that desired object was present
                 if ~isempty(Bboxes)
-                    Centroids = calculateCentroids(ptCloud,Bboxes);
-                    centroidNum = size(Centroids,1);
-                    % Check if enough objects were identified to pick up
-                    if no_of_picks > centroidNum
-                        %disp(['Camera could only find ',num2str(centroidNum),' object(s)']);
-                        no_of_picks = centroidNum;
-                        % If not enough are available, check with the user
-                        % if they wish to continue
-                        quest = ['Camera could only find ',num2str(centroidNum),' object(s). Do you wish to continue?'];
-                        % Set button names and a final default button if return is pressed
-                        too_Few = questdlg(quest,'too_Few','Yes','No','Close All','Yes');
-                        switch too_Few
-                            case 'No'
-                                continue;
-                            case 'Close All'
-                                % Exit loop
-                                close all;
-                                break;
-                            case 'Yes'
+                    % Show how many objects were found
+                    objectNum = size(Bboxes,1);
+                    disp(['Found ', num2str(objectNum),' objects']);
+                    
+                    validInput = 0;
+                    while validInput == 0
+                        % Choose number of picks
+                        answer = inputdlg('Enter number of picks:','Picks Input',[1 35],{''});
+                        no_of_picks = str2double(answer{1});
+                        if no_of_picks > objectNum
+                            disp(['Too Many Picks, choose a number less than or equal to ', num2str(objectNum)]);
+                            continue
+                        elseif isnan(no_of_picks)
+                            disp('Invalid Input');
+                            continue
+                        else
+                            validInput = 1;
+                            disp(['Calculating ',num2str(no_of_picks),' Centroid Value(s)']);
                         end
-                        
                     end
+
+                    % Calculate centroids of desired objects
+                    Centroids = calculateCentroids(ptCloud,Bboxes(1:no_of_picks,:));
                     disp(['Publishing ',num2str(no_of_picks),' object(s)']);
                     % if ros is being used, publish the coordinates
                     if ROS_Used == 1
