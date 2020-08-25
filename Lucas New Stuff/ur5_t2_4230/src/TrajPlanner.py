@@ -370,7 +370,7 @@ def main():
   # rospy.init_node('listener', anonymous=True)
   rospy.Subscriber('MATLAB', String, storeCoord)  #make the subscriber for the MATLAB Coordinates
   print ""
-  print "============ Press `Enter` to begin the tutorial by setting up the moveit_commander ..."
+  print "============ Begin the tutorial by setting up the moveit_commander ..."
   raw_input()
   tutorial = MoveGroupPythonIntefaceTutorial()
   
@@ -392,7 +392,7 @@ def main():
       try:
 
 
-        print "============ Press `Enter` to execute a movement using a joint state goal ..."
+        print "============ Execute a movement using a joint state goal ..."
         #raw_input()
         tutorial.go_to_joint_state()
 
@@ -400,15 +400,15 @@ def main():
         # raw_input()
         # tutorial.go_to_pose_goal()
 
-        print "============ Press `Enter` to plan and display a Cartesian path ..."
+        print "============ Plan and display a Cartesian path ..."
         #raw_input()
         cartesian_plan, fraction = MoveGroupPythonIntefaceTutorial.plan_cartesian_path(tutorial,CoordX,CoordY)
 
-        print "============ Press `Enter` to display a saved trajectory (this will replay the Cartesian path)  ..."
+        print "============ Display a saved trajectory (this will replay the Cartesian path)  ..."
         #raw_input()
         tutorial.display_trajectory(cartesian_plan)
 
-        print "============ Press `Enter` to execute a saved path ..."
+        print "============ Execute a saved path to object..."
         #raw_input()
         tutorial.execute_plan(cartesian_plan)
 
@@ -416,11 +416,11 @@ def main():
         time.sleep(0.5)
         cartesian_plan, fraction = MoveGroupPythonIntefaceTutorial.plan_bin_path(tutorial,CoordX,CoordY)
 
-        print "============ Press `Enter` to display a saved trajectory (this will replay the Cartesian path)  ..."
+        print "============ Display a saved trajectory (this will replay the Cartesian path)  ..."
         #raw_input()
         tutorial.display_trajectory(cartesian_plan)
 
-        print "============ Press `Enter` to execute a saved path ..."
+        print "============ Execute a saved path to bin..."
         #raw_input()
         tutorial.execute_plan(cartesian_plan)
 

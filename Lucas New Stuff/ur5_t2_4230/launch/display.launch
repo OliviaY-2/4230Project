@@ -38,10 +38,17 @@
     <arg name="debug" default="$(arg debug)" />
 </include>
 
+  <!-- Run Rviz and load the default config to see the state of the move_group node -->
+  <!-- <include file="$(find ur5_moveit_config)/launch/moveit_rviz.launch">
+    <arg name="config" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include> -->
+
+
 <!-- Spawn the table -->
 	<!--node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/table.urdf -urdf -model table -y -1.25 -x 0.0 -z 0.0"/-->
 	
 	<!-- Spawn the container that holds the items picked up -->
-	<!--node name="spawn_container" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/container.urdf -urdf -model container -y -0.85 -x -0.73 -z 0.5"/-->
+	<node name="spawn_container" pkg="gazebo_ros" type="spawn_model" args="-file $(find ur5_t2_4230)/urdf/container.urdf -urdf -model container -y -0.85 -x -0.73 -z 0.5"/>
 
 </launch>

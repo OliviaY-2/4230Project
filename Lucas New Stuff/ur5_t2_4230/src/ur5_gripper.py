@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
-
+#From LiHuang 
+#github.com/lihuang3/ur5_ROS-Gazebo
 
 import rospy, sys, numpy as np
 import geometry_msgs.msg
@@ -205,40 +205,6 @@ def gripper8_off():
     except rospy.ServiceException, e:
         print "Service call failed: %s" % e
 
-# class MyGripper:
-#     def main(self):
-#         rospy.Subscriber('Gripper', String, self.trigger)
-#         self.value = 0
-#         self.rate = rospy.get_param("~rate",10)
-#         while not rospy.is_shutdown():
-
-#             # print(self.value)
-#             if self.value:
-#                 print("gripper on")
-#                 gripper_on()
-#                 gripper1_on()
-#                 gripper2_on()
-#                 gripper3_on()
-#                 gripper4_on()
-#                 gripper5_on()
-#                 gripper6_on()
-#                 gripper7_on()
-#                 gripper8_on()
-
-#             else:
-#                 print("gripper off")
-#                 gripper_off()
-#                 gripper1_off()
-#                 gripper2_off()
-#                 gripper3_off()
-#                 gripper4_off()
-#                 gripper5_off()
-#                 gripper6_off()
-#                 gripper7_off()
-#                 gripper8_off()
-
-#     def trigger(self, newValue):
-#         self.value = int(newValue.data)
 def trigger(msg):
     if int(msg.data):
         print("gripper on")
@@ -263,18 +229,11 @@ def trigger(msg):
         gripper6_off()
         gripper7_off()
         gripper8_off()
-        
+
 rospy.Subscriber('Gripper', String, trigger)
 
 rospy.init_node("ur5_gripper", anonymous=False)
 
 gripper_status_sub = rospy.Subscriber('/ur5/vacuum_gripper/grasping', Bool, gripper_status, queue_size=1)
-
-# if __name__ == '__main__':
-#     try:
-#         MyGripper().main()
-#     except rospy.ROSInterruptException:
-#         pass
-
 
 rospy.spin()

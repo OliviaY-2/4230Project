@@ -26,12 +26,12 @@
       </visual>
       <inertial>
           <inertia>
-            <ixx>0</ixx>
+            <ixx>10</ixx>
             <ixy>0</ixy>
             <ixz>0</ixz>
-            <iyy>0</iyy>
+            <iyy>10</iyy>
             <iyz>0</iyz>
-            <izz>0</izz>
+            <izz>10</izz>
           </inertia>
           <mass>0.005</mass>
         </inertial>
